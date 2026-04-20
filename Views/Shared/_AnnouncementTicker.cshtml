@@ -1,0 +1,16 @@
+@model ASP_PROJECT.Models.ViewModels.AnnouncementListViewModel
+
+@if (Model.Pinned.Any())
+{
+    <section class="ticker-strip">
+        <div class="container">
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <span class="ticker-label">Pinned updates</span>
+                @foreach (var item in Model.Pinned)
+                {
+                    <a asp-controller="Announcements" asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                }
+            </div>
+        </div>
+    </section>
+}

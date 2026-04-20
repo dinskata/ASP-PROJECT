@@ -1,0 +1,100 @@
+@model ASP_PROJECT.Models.ViewModels.EventDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <span class="section-label">@Model.Category</span>
+                <h1>@Model.Title</h1>
+                <p class="lead text-secondary">@Model.Description</p>
+                <div class="detail-grid my-4">
+                    <div><strong>Date</strong><span>@Model.StartsAtUtc.ToLocalTime().ToString("f")</span></div>
+                    <div><strong>Venue</strong><span>@Model.Venue</span></div>
+                    <div><strong>Address</strong><span>@Model.VenueAddress, @Model.City</span></div>
+                    <div><strong>Duration</strong><span>@Model.DurationMinutes min</span></div>
+                    <div><strong>Price</strong><span>@(Model.Price == 0 ? "Free" : $"{Model.Price:F2} BGN")</span></div>
+                    <div><strong>Seats left</strong><span>@Model.SeatsAvailable</span></div>
+                </div>
+
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body">
+                        <h3 class="h5">Reviews</h3>
+                        <p class="text-secondary">Average rating: @Model.AverageRating.ToString("F1") / 5 from @Model.ReviewCount review(s).</p>
+                        @if (Model.Reviews.Any())
+                        {
+                            foreach (var review in Model.Reviews)
+                            {
+                                <div class="review-item">
+                                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                                        <strong>@review.AuthorName</strong>
+                                        <span class="text-secondary">@review.CreatedOnUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                    </div>
+                                    <div class="small text-warning">Rating: @review.Rating / 5</div>
+                                    <p class="mb-0">@review.Comment</p>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-secondary">No reviews yet.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h3 class="h5">Reserve your seat</h3>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-action="Register" method="post" class="vstack gap-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="EventId" value="@Model.Id" />
+                                <div>
+                                    <label class="form-label" for="tickets">Tickets</label>
+                                    <input class="form-control" type="number" min="1" max="10" id="tickets" name="Tickets" value="1" />
+                                </div>
+                                <button class="btn btn-primary">Register</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <p class="text-secondary">Sign in to reserve tickets and leave reviews after attending.</p>
+                        }
+                    </div>
+                </div>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h3 class="h5">Leave a review</h3>
+                            <form asp-action="Review" method="post" class="vstack gap-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="EventId" value="@Model.Id" />
+                                <div>
+                                    <label class="form-label" for="rating">Rating</label>
+                                    <select id="rating" name="Rating" class="form-select">
+                                        <option value="5">5</option>
+                                        <option value="4">4</option>
+                                        <option value="3">3</option>
+                                        <option value="2">2</option>
+                                        <option value="1">1</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="comment">Comment</label>
+                                    <textarea id="comment" name="Comment" class="form-control" rows="4"></textarea>
+                                </div>
+                                <button class="btn btn-outline-primary">Submit review</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

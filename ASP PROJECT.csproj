@@ -16,4 +16,11 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="ASP PROJECT.Tests\**" />
+    <Content Remove="ASP PROJECT.Tests\**" />
+    <EmbeddedResource Remove="ASP PROJECT.Tests\**" />
+    <None Remove="ASP PROJECT.Tests\**" />
+  </ItemGroup>
+
 </Project>

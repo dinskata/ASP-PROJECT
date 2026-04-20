@@ -1,0 +1,22 @@
+@model ASP_PROJECT.Models.ViewModels.EventEditViewModel
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<section class="section-space">
+    <div class="container narrow-content">
+        <h1>Create event</h1>
+        <form method="post" class="card border-0 shadow-sm p-4">
+            @Html.AntiForgeryToken()
+            <partial name="~/Views/Shared/_EventForm.cshtml" model="Model" />
+            <div class="d-flex gap-3 mt-4">
+                <button class="btn btn-primary">Save</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

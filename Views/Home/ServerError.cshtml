@@ -1,0 +1,17 @@
+@model ASP_PROJECT.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Server Error";
+}
+
+<section class="section-space">
+    <div class="container narrow-content text-center">
+        <span class="display-1 fw-semibold text-danger">500</span>
+        <h1>@Model.Title</h1>
+        <p class="text-secondary">@Model.Message</p>
+        @if (Model.ShowRequestId)
+        {
+            <p class="text-muted">Request ID: @Model.RequestId</p>
+        }
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Return Home</a>
+    </div>
+</section>

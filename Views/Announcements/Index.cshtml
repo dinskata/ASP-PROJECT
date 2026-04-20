@@ -1,0 +1,47 @@
+@model ASP_PROJECT.Models.ViewModels.AnnouncementListViewModel
+@{
+    ViewData["Title"] = "Announcements";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Updates</span>
+                <h1>Announcements</h1>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h3 class="h5">Pinned</h3>
+                        @foreach (var item in Model.Pinned)
+                        {
+                            <div class="announcement-entry">
+                                <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h3 class="h5">Recent</h3>
+                        @foreach (var item in Model.Recent)
+                        {
+                            <div class="announcement-entry">
+                                <div class="d-flex justify-content-between gap-3">
+                                    <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                                    <span class="text-secondary small">@item.PublishedOnUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                </div>
+                                <p class="mb-0 text-secondary">@item.Content</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

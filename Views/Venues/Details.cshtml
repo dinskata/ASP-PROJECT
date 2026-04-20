@@ -1,0 +1,31 @@
+@model ASP_PROJECT.Models.ViewModels.VenueDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <span class="section-label">@Model.City</span>
+                <h1>@Model.Name</h1>
+                <p class="text-secondary">@Model.Description</p>
+                <div class="detail-grid">
+                    <div><strong>Address</strong><span>@Model.Address</span></div>
+                    <div><strong>Capacity</strong><span>@Model.Capacity attendees</span></div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <h2 class="h4 mb-3">Upcoming events</h2>
+                <div class="row g-4">
+                    @foreach (var item in Model.UpcomingEvents)
+                    {
+                        <div class="col-md-6">
+                            <partial name="_EventCard" model="item" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,55 @@
+@model ASP_PROJECT.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Personal area</span>
+                <h1>Welcome, @Model.UserName</h1>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-4"><div class="feature-card"><h5>Registrations</h5><p>@Model.RegistrationsCount upcoming event bookings.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Reviews</h5><p>@Model.ReviewsCount submitted attendee reviews.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Account</h5><p>Identity-managed secure access and role handling.</p></div></div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">My registrations</h2>
+                @if (Model.UpcomingRegistrations.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date</th>
+                                    <th>Tickets</th>
+                                    <th>Venue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.UpcomingRegistrations)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="Events" asp-action="Details" asp-route-id="@item.EventId">@item.EventTitle</a></td>
+                                        <td>@item.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                        <td>@item.Tickets</td>
+                                        <td>@item.Venue</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="mb-0 text-secondary">You have no registrations yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

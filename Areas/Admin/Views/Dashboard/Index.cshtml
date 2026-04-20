@@ -1,0 +1,35 @@
+@model ASP_PROJECT.Models.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Platform dashboard</h1>
+            </div>
+            <a class="btn btn-primary" asp-area="Admin" asp-controller="Events" asp-action="Create">Create Event</a>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-3"><div class="feature-card"><h5>Events</h5><p>@Model.EventsCount total items.</p></div></div>
+            <div class="col-md-3"><div class="feature-card"><h5>Venues</h5><p>@Model.VenuesCount registered locations.</p></div></div>
+            <div class="col-md-3"><div class="feature-card"><h5>Registrations</h5><p>@Model.RegistrationsCount attendee bookings.</p></div></div>
+            <div class="col-md-3"><div class="feature-card"><h5>Users</h5><p>@Model.UsersCount platform accounts.</p></div></div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Next scheduled events</h2>
+                <div class="row g-3">
+                    @foreach (var item in Model.NextEvents)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <partial name="~/Views/Shared/_EventCard.cshtml" model="item" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

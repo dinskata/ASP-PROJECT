@@ -1,8 +1,69 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model ASP_PROJECT.Models.ViewModels.EventListViewModel
+@{
+    ViewData["Title"] = "Home";
+    var announcements = ViewData["Announcements"] as ASP_PROJECT.Models.ViewModels.AnnouncementListViewModel ?? new();
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<partial name="_AnnouncementTicker" model="announcements" />
+
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="hero-kicker">Built for conferences, workshops, and local communities</span>
+                <h1 class="display-4 fw-semibold mt-3">Manage and discover inspiring events in one place.</h1>
+                <p class="lead text-secondary mt-3">Eventure helps visitors browse upcoming sessions, compare venues, register safely, and review events after attending.</p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a class="btn btn-primary btn-lg" asp-controller="Events" asp-action="Index">Browse Events</a>
+                    <a class="btn btn-outline-light btn-lg" asp-controller="Venues" asp-action="Index">View Venues</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="stats-grid">
+                    <div class="stat-card"><strong>15+</strong><span>Pages and views</span></div>
+                    <div class="stat-card"><strong>6</strong><span>Domain entities</span></div>
+                    <div class="stat-card"><strong>Identity</strong><span>User and admin roles</span></div>
+                    <div class="stat-card"><strong>EF Core</strong><span>SQL Server data layer</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Featured events</span>
+                <h2>Upcoming opportunities</h2>
+            </div>
+            <a class="btn btn-sm btn-outline-primary" asp-controller="Events" asp-action="Index">See all</a>
+        </div>
+        <div class="row g-4">
+            @foreach (var item in Model.Result.Items)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <partial name="_EventCard" model="item" />
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="section-space soft-panel">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <h3>Why this project fits the assignment</h3>
+                <p class="text-secondary">The application uses ASP.NET Core MVC, Identity, EF Core, Razor views, partials, MVC Areas, validation, search, pagination, and seeded data.</p>
+            </div>
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="feature-card"><h5>Secure registration</h5><p>Validated forms, antiforgery protection, and role-based access.</p></div></div>
+                    <div class="col-md-4"><div class="feature-card"><h5>Admin control</h5><p>Area-based administration for editing and publishing events.</p></div></div>
+                    <div class="col-md-4"><div class="feature-card"><h5>Search and paging</h5><p>Visitors can filter events and browse venue pages comfortably.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,6 +1,12 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "Privacy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<section class="section-space">
+    <div class="container narrow-content">
+        <h1>Privacy Policy</h1>
+        <p>This educational project stores account data, registrations, and reviews only for platform functionality.</p>
+        <p>User-generated content is rendered through Razor, which HTML-encodes output by default to reduce XSS risks.</p>
+        <p>Administrator access is restricted by ASP.NET Identity roles and protected actions use antiforgery validation.</p>
+    </div>
+</section>
