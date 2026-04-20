@@ -10,7 +10,7 @@
         <p class="text-secondary mb-3">@Model.Venue, @Model.City</p>
         <div class="mt-auto d-flex justify-content-between align-items-center">
             <div>
-                <div class="fw-semibold">@(Model.Price == 0 ? "Free" : $"{Model.Price:F2} BGN")</div>
+                <div class="fw-semibold">@(Model.Price == 0 ? "Free" : $"€{Model.Price:F2}")</div>
                 <small class="text-secondary">@Model.SeatsAvailable seats left</small>
             </div>
             <a class="btn btn-outline-primary" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">Open</a>

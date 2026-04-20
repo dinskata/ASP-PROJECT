@@ -15,7 +15,7 @@
                     <div><strong>Venue</strong><span>@Model.Venue</span></div>
                     <div><strong>Address</strong><span>@Model.VenueAddress, @Model.City</span></div>
                     <div><strong>Duration</strong><span>@Model.DurationMinutes min</span></div>
-                    <div><strong>Price</strong><span>@(Model.Price == 0 ? "Free" : $"{Model.Price:F2} BGN")</span></div>
+                    <div><strong>Price</strong><span>@(Model.Price == 0 ? "Free" : $"€{Model.Price:F2}")</span></div>
                     <div><strong>Seats left</strong><span>@Model.SeatsAvailable</span></div>
                 </div>
 

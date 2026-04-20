@@ -6,7 +6,24 @@
     <div class="container narrow-content">
         <span class="section-label">Project concept</span>
         <h1>About Eventure</h1>
-        <p>Eventure is a conference and workshop management platform created as an advanced ASP.NET Core MVC project. Visitors can explore events, compare venues, read announcements, register, and leave feedback after attending.</p>
-        <p>The architecture separates controllers, services, data access, entities, and view models to keep responsibilities clear and maintainable.</p>
+        <p>Eventure is a conference and workshop management platform created as an advanced ASP.NET Core MVC project. Visitors can explore events, compare venues, read announcements, create accounts, reserve seats, and share feedback after attending.</p>
+        <p>The platform is designed to make event discovery feel straightforward while still supporting the practical details that matter, including categories, venue information, seat availability, registration flow, and attendee reviews.</p>
+
+        <div class="vstack gap-4 mt-4">
+            <div class="feature-card">
+                <h2 class="h4">What the platform offers</h2>
+                <p class="mb-0">Eventure brings together public event browsing and authenticated user actions in one place. Guests can review upcoming events and announcements, while registered users can keep track of their activity through a personal dashboard, register for available events, and post a review after participating.</p>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="h4">How it is built</h2>
+                <p class="mb-0">The application uses ASP.NET Core MVC with Razor views, Entity Framework Core for data access, and ASP.NET Identity for authentication and role-based access. Controllers stay focused on request handling, services manage business logic, and view models shape data for the UI so the project remains easier to extend and maintain.</p>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="h4">Why that structure matters</h2>
+                <p class="mb-0">This separation helps keep the codebase clearer as features grow. It supports safer form handling, easier testing, cleaner data flow between layers, and a better foundation for future improvements such as richer dashboards, event management enhancements, or more advanced user account features.</p>
+            </div>
+        </div>
     </div>
 </section>

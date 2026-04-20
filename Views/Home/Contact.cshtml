@@ -1,12 +1,69 @@
+@model ASP_PROJECT.Models.ViewModels.ContactFormViewModel
 @{
     ViewData["Title"] = "Contact";
 }
 
 <section class="section-space">
-    <div class="container narrow-content">
-        <span class="section-label">Support</span>
-        <h1>Contact</h1>
-        <p>For demonstration purposes, contact requests can be sent to <strong>team@eventure.local</strong>.</p>
-        <p>The seeded administrator account is <strong>admin@eventure.local</strong> with password <strong>Admin123!</strong>.</p>
+    <div class="container">
+        <div class="auth-grid">
+            <div class="auth-copy">
+                <span class="section-label">Support</span>
+                <h1>Contact the Eventure team.</h1>
+                <p>Use the form to send a question, partnership request, speaker inquiry, or event-related request. We can help with registrations, venue details, accessibility questions, ticket availability, and collaboration opportunities.</p>
+                <div class="auth-points">
+                    <div class="auth-point">
+                        <strong>Email</strong>
+                        <span>team@eventure.local</span>
+                    </div>
+                    <div class="auth-point">
+                        <strong>What to include</strong>
+                        <span>Share the event name, your question, and any important timing details so the team can respond more accurately.</span>
+                    </div>
+                    <div class="auth-point">
+                        <strong>Help topics</strong>
+                        <span>Registration support, workshop access, partnership conversations, speaker proposals, and venue logistics.</span>
+                    </div>
+                    <div class="auth-point">
+                        <strong>Typical replies</strong>
+                        <span>General questions and event support requests are usually handled within one to two business days.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="auth-card">
+                <div class="auth-card-header">
+                    <h2>Send a message</h2>
+                    <p>Fill in all fields and submit your request.</p>
+                </div>
+                <form method="post" class="vstack gap-3">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                    <div>
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Subject" class="form-label"></label>
+                        <input asp-for="Subject" class="form-control" />
+                        <span asp-validation-for="Subject" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Message" class="form-label"></label>
+                        <textarea asp-for="Message" class="form-control" rows="6"></textarea>
+                        <span asp-validation-for="Message" class="text-danger"></span>
+                    </div>
+                    <button class="btn btn-primary btn-lg">Send message</button>
+                </form>
+            </div>
+        </div>
     </div>
 </section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ASP_PROJECT.Models;
+using ASP_PROJECT.Models.ViewModels;
 using ASP_PROJECT.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,7 +32,22 @@ public class HomeController : Controller
 
     public IActionResult About() => View();
 
-    public IActionResult Contact() => View();
+    [HttpGet]
+    public IActionResult Contact() => View(new ContactFormViewModel());
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Contact(ContactFormViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        TempData["StatusMessage"] = "Your message has been sent successfully.";
+        ModelState.Clear();
+        return View(new ContactFormViewModel());
+    }
 
     public IActionResult StatusCodePage(int code)
     {

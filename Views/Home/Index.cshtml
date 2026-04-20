@@ -8,36 +8,74 @@
 
 <section class="hero-section">
     <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6">
-                <span class="hero-kicker">Built for conferences, workshops, and local communities</span>
-                <h1 class="display-4 fw-semibold mt-3">Manage and discover inspiring events in one place.</h1>
-                <p class="lead text-secondary mt-3">Eventure helps visitors browse upcoming sessions, compare venues, register safely, and review events after attending.</p>
+        <div class="hero-grid">
+            <div class="hero-copy-block">
+                <span class="hero-kicker">Curated events for ambitious people and active communities</span>
+                <h1 class="hero-title mt-3">Find the next event worth leaving home for.</h1>
+                <p class="lead hero-copy mt-3">Discover focused workshops, community gatherings, and professional sessions with clear details, polished booking flow, and a dashboard that keeps everything organized.</p>
                 <div class="d-flex flex-wrap gap-3 mt-4">
                     <a class="btn btn-primary btn-lg" asp-controller="Events" asp-action="Index">Browse Events</a>
                     <a class="btn btn-outline-light btn-lg" asp-controller="Venues" asp-action="Index">View Venues</a>
                 </div>
+                <div class="hero-inline-stats">
+                    <div>
+                        <strong>Fresh listings</strong>
+                        <span>Browse live upcoming sessions</span>
+                    </div>
+                    <div>
+                        <strong>Fast booking</strong>
+                        <span>Register in a few clicks</span>
+                    </div>
+                    <div>
+                        <strong>Clean admin flow</strong>
+                        <span>Manage content with ease</span>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-6">
-                <div class="stats-grid">
-                    <div class="stat-card"><strong>15+</strong><span>Pages and views</span></div>
-                    <div class="stat-card"><strong>6</strong><span>Domain entities</span></div>
-                    <div class="stat-card"><strong>Identity</strong><span>User and admin roles</span></div>
-                    <div class="stat-card"><strong>EF Core</strong><span>SQL Server data layer</span></div>
+            <div class="hero-stage">
+                <div class="hero-stage-card hero-stage-primary">
+                    <div class="hero-stage-header">
+                        <span class="badge bg-light text-dark">Featured this month</span>
+                        <span class="hero-panel-label">Editor selection</span>
+                    </div>
+                    <h3>Modern ASP.NET Core Summit</h3>
+                    <p>A practical day of architecture, security, and deployment sessions for students and developers building real web applications.</p>
+                    <div class="hero-stage-meta">
+                        <div><strong>Sofia</strong><span>Skyline Hall</span></div>
+                        <div><strong>39 EUR</strong><span>Limited seats</span></div>
+                    </div>
+                </div>
+                <div class="hero-stage-stack">
+                    <div class="hero-stage-card hero-stage-secondary">
+                        <span class="tiny-label">Why people stay</span>
+                        <strong>Clean browsing</strong>
+                        <p>Search by title, city, and category without clutter.</p>
+                    </div>
+                    <div class="hero-stage-card hero-stage-secondary accent-card">
+                        <span class="tiny-label">After signup</span>
+                        <strong>Your own dashboard</strong>
+                        <p>Track registrations, manage activity, and return later.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="section-space">
+<section class="section-space home-highlight-band">
     <div class="container">
-        <div class="section-heading">
-            <div>
+        <div class="highlight-grid">
+            <div class="highlight-intro">
                 <span class="section-label">Featured events</span>
-                <h2>Upcoming opportunities</h2>
+                <h2>Upcoming opportunities with a clearer focus.</h2>
+                <p class="text-secondary">Instead of a crowded listing wall, the home page now introduces the platform, then moves directly into a curated set of events people can act on.</p>
+                <a class="btn btn-sm btn-outline-primary mt-2" asp-controller="Events" asp-action="Index">See all events</a>
             </div>
-            <a class="btn btn-sm btn-outline-primary" asp-controller="Events" asp-action="Index">See all</a>
+            <div class="highlight-side-card">
+                <span class="tiny-label">Platform feel</span>
+                <h4>Designed to feel like a product, not a checklist.</h4>
+                <p class="mb-0">The layout now prioritizes rhythm, whitespace, and stronger grouping so every section feels intentional.</p>
+            </div>
         </div>
         <div class="row g-4">
             @foreach (var item in Model.Result.Items)
@@ -50,19 +88,60 @@
     </div>
 </section>
 
-<section class="section-space soft-panel">
+<section class="section-space editorial-section">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <h3>Why this project fits the assignment</h3>
-                <p class="text-secondary">The application uses ASP.NET Core MVC, Identity, EF Core, Razor views, partials, MVC Areas, validation, search, pagination, and seeded data.</p>
+        <div class="editorial-grid">
+            <div class="editorial-copy">
+                <span class="section-label">How it flows</span>
+                <h2>Discovery, booking, and follow-up are separated into simple steps.</h2>
+                <p class="text-secondary">Visitors land on a clear homepage, move into richer event details, register through individual accounts, and return to a personal dashboard without the site feeling overloaded.</p>
             </div>
-            <div class="col-lg-8">
-                <div class="row g-3">
-                    <div class="col-md-4"><div class="feature-card"><h5>Secure registration</h5><p>Validated forms, antiforgery protection, and role-based access.</p></div></div>
-                    <div class="col-md-4"><div class="feature-card"><h5>Admin control</h5><p>Area-based administration for editing and publishing events.</p></div></div>
-                    <div class="col-md-4"><div class="feature-card"><h5>Search and paging</h5><p>Visitors can filter events and browse venue pages comfortably.</p></div></div>
-                </div>
+            <div class="editorial-note">
+                <strong>Better first impression</strong>
+                <p class="mb-0">More contrast, fewer “assignment” callouts, and a stronger visual story from top to bottom.</p>
+            </div>
+        </div>
+        <div class="journey-grid">
+            <div class="journey-card">
+                <span>01</span>
+                <h5>Explore</h5>
+                <p>Open the catalog, compare event types, and find the right session fast.</p>
+            </div>
+            <div class="journey-card">
+                <span>02</span>
+                <h5>Register</h5>
+                <p>Create an account and reserve seats through a cleaner, more polished flow.</p>
+            </div>
+            <div class="journey-card">
+                <span>03</span>
+                <h5>Return</h5>
+                <p>Use the dashboard to manage activity and come back for the next event.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-space soft-panel value-section">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">What makes it useful</span>
+                <h2>Core features presented with less noise.</h2>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4"><div class="feature-card"><h5>Secure registration</h5><p>Validated forms, antiforgery protection, and role-based access for a safer user flow.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Admin control</h5><p>Area-based administration for editing, publishing, and maintaining the event catalog.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Search and paging</h5><p>Visitors can filter events and browse venue pages without overwhelming long lists.</p></div></div>
+        </div>
+        <div class="value-strip">
+            <div><strong>Identity accounts</strong><span>Register, log in, and keep activity personal</span></div>
+            <div><strong>Event reviews</strong><span>Attendees can leave feedback after participating</span></div>
+            <div><strong>Responsive layout</strong><span>Works better across desktop, tablet, and mobile</span></div>
+            <div><strong>Clean UI language</strong><span>More editorial, less generic template</span></div>
+        </div>
+    </div>
+</section>
             </div>
         </div>
     </div>

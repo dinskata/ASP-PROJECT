@@ -4,40 +4,54 @@
 }
 
 <section class="section-space">
-    <div class="container">
-        <div class="section-heading">
+    <div class="container announcements-page">
+        <div class="section-heading announcements-heading">
             <div>
                 <span class="section-label">Updates</span>
                 <h1>Announcements</h1>
             </div>
         </div>
-        <div class="row g-4">
+        <div class="row g-4 justify-content-center announcements-layout">
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm h-100 announcements-card">
+                    <div class="card-body announcements-card-body">
                         <h3 class="h5">Pinned</h3>
-                        @foreach (var item in Model.Pinned)
+                        @if (Model.Pinned.Any())
                         {
-                            <div class="announcement-entry">
-                                <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
-                            </div>
+                            @foreach (var item in Model.Pinned)
+                            {
+                                <div class="announcement-entry">
+                                    <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="announcement-empty mb-0">No pinned announcements right now.</p>
                         }
                     </div>
                 </div>
             </div>
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm announcements-card">
+                    <div class="card-body announcements-card-body">
                         <h3 class="h5">Recent</h3>
-                        @foreach (var item in Model.Recent)
+                        @if (Model.Recent.Any())
                         {
-                            <div class="announcement-entry">
-                                <div class="d-flex justify-content-between gap-3">
-                                    <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
-                                    <span class="text-secondary small">@item.PublishedOnUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            @foreach (var item in Model.Recent)
+                            {
+                                <div class="announcement-entry">
+                                    <div class="announcement-entry-header">
+                                        <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
+                                        <span class="text-secondary small">@item.PublishedOnUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                    </div>
+                                    <p class="mb-0 text-secondary">@item.Content</p>
                                 </div>
-                                <p class="mb-0 text-secondary">@item.Content</p>
-                            </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="announcement-empty mb-0">No recent announcements yet.</p>
                         }
                     </div>
                 </div>
