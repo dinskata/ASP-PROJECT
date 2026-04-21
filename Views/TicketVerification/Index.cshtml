@@ -1,0 +1,148 @@
+@model ASP_PROJECT.Models.ViewModels.TicketVerificationPageViewModel
+@{
+    ViewData["Title"] = "Ticket Verification";
+}
+
+<section class="section-space">
+    <div class="container narrow-content">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Verification</span>
+                <h1>Check ticket legitimacy</h1>
+            </div>
+        </div>
+        <form method="post" class="card border-0 shadow-sm p-4 mb-4" id="ticketVerificationForm">
+            @Html.AntiForgeryToken()
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="TicketCode" class="form-label">Ticket code</label>
+                    <input asp-for="TicketCode" class="form-control" placeholder="REG00001-EV0001-T01" id="ticketCodeInput" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="VerificationCode" class="form-label">Verification code</label>
+                    <input asp-for="VerificationCode" class="form-control text-uppercase" placeholder="12-character code" id="verificationCodeInput" />
+                </div>
+            </div>
+            <div class="d-flex gap-3 mt-4">
+                <button class="btn btn-primary">Verify ticket</button>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#demoScannerModal">Demo QR scanner</button>
+            </div>
+        </form>
+
+        <div class="modal fade" id="demoScannerModal" tabindex="-1" aria-labelledby="demoScannerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <span class="section-label">Scanner demo</span>
+                            <h2 class="modal-title fs-4 mb-0" id="demoScannerModalLabel">Simulate QR scanning</h2>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="demo-scanner-stage mb-4">
+                            <div class="demo-scanner-frame">
+                                <div class="demo-scanner-line"></div>
+                                <span class="demo-scanner-corner demo-scanner-corner-top-left"></span>
+                                <span class="demo-scanner-corner demo-scanner-corner-top-right"></span>
+                                <span class="demo-scanner-corner demo-scanner-corner-bottom-left"></span>
+                                <span class="demo-scanner-corner demo-scanner-corner-bottom-right"></span>
+                            </div>
+                            <p class="text-secondary small mb-0">Pick one of the recent demo tickets below to simulate a QR scan and auto-fill the verification form.</p>
+                        </div>
+
+                        <div class="demo-scan-list">
+                            @if (!Model.DemoTickets.Any())
+                            {
+                                <div class="demo-scan-item">
+                                    <div>
+                                        <strong>No demo tickets available</strong>
+                                        <div class="small text-secondary">This account does not currently have access to any active venue tickets.</div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var ticket in Model.DemoTickets)
+                                {
+                                    <div class="demo-scan-item">
+                                        <div>
+                                            <strong>@ticket.EventTitle</strong>
+                                            <div class="small text-secondary">@ticket.BuyerName &middot; @ticket.SeatLabel &middot; @ticket.PaymentStatus</div>
+                                            <div class="small text-secondary">@ticket.TicketCode / @ticket.VerificationCode</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-primary demo-scan-trigger"
+                                            data-ticket-code="@ticket.TicketCode"
+                                            data-verification-code="@ticket.VerificationCode">
+                                            Scan demo QR
+                                        </button>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Result?.IsSubmitted == true)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                        <div>
+                            <span class="section-label">Verification result</span>
+                            <h2 class="h4 mb-0">@(Model.Result.IsValid ? "Ticket accepted" : "Ticket not valid")</h2>
+                        </div>
+                        <span class="badge @(Model.Result.IsValid ? "text-bg-success" : "text-bg-danger")">
+                            @(Model.Result.IsValid ? "Valid" : "Rejected")
+                        </span>
+                    </div>
+                    <p class="text-secondary">@Model.Result.Message</p>
+
+                    <div class="detail-grid">
+                        <div><strong>Ticket code</strong><span>@Model.Result.TicketCode</span></div>
+                        <div><strong>Verification code</strong><span>@Model.Result.VerificationCode</span></div>
+                        <div><strong>Buyer</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.BuyerName) ? "-" : Model.Result.BuyerName)</span></div>
+                        <div><strong>Event</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.EventTitle) ? "-" : Model.Result.EventTitle)</span></div>
+                        <div><strong>Venue</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.VenueName) ? "-" : Model.Result.VenueName)</span></div>
+                        <div><strong>Seat</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.SeatLabel) ? "-" : Model.Result.SeatLabel)</span></div>
+                        <div><strong>Status</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.PaymentStatus) ? "-" : Model.Result.PaymentStatus)</span></div>
+                        <div><strong>Starts</strong><span>@(Model.Result.StartsAtUtc?.ToLocalTime().ToString("f") ?? "-")</span></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('ticketVerificationForm');
+            const ticketCodeInput = document.getElementById('ticketCodeInput');
+            const verificationCodeInput = document.getElementById('verificationCodeInput');
+            const demoScannerModal = document.getElementById('demoScannerModal');
+
+            if (!form || !ticketCodeInput || !verificationCodeInput || !demoScannerModal) {
+                return;
+            }
+
+            demoScannerModal.addEventListener('click', (event) => {
+                const trigger = event.target.closest('.demo-scan-trigger');
+                if (!trigger) {
+                    return;
+                }
+
+                ticketCodeInput.value = trigger.getAttribute('data-ticket-code') || '';
+                verificationCodeInput.value = trigger.getAttribute('data-verification-code') || '';
+
+                const modal = bootstrap.Modal.getInstance(demoScannerModal);
+                modal?.hide();
+                form.requestSubmit();
+            });
+        })();
+    </script>
+}

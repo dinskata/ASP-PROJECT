@@ -123,13 +123,11 @@ public class VenueService : IVenueService
             .SingleOrDefaultAsync();
     }
 
-    public async Task<IReadOnlyCollection<VenueListItemViewModel>> GetAllForManagementAsync(IReadOnlyCollection<int>? allowedVenueIds = null)
+    public async Task<IReadOnlyCollection<VenueListItemViewModel>> GetAllForManagementAsync(IReadOnlyCollection<int>? allowedVenueIds = null, string? searchTerm = null, string? sortBy = null)
     {
         var query = _dbContext.Venues
             .AsNoTracking()
             .Include(x => x.Events)
-            .OrderBy(x => x.City)
-            .ThenBy(x => x.Name)
             .AsQueryable();
 
         if (allowedVenueIds is { Count: > 0 })
@@ -140,6 +138,24 @@ public class VenueService : IVenueService
         {
             query = query.Where(_ => false);
         }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalized = searchTerm.Trim().ToLowerInvariant();
+            query = query.Where(x => x.Name.ToLower().Contains(normalized) || x.City.ToLower().Contains(normalized));
+        }
+
+        query = (sortBy ?? "city").ToLowerInvariant() switch
+        {
+            "city_desc" => query.OrderByDescending(x => x.City).ThenBy(x => x.Name),
+            "name" => query.OrderBy(x => x.Name),
+            "name_desc" => query.OrderByDescending(x => x.Name),
+            "capacity_desc" => query.OrderByDescending(x => x.Capacity).ThenBy(x => x.Name),
+            "capacity_asc" => query.OrderBy(x => x.Capacity).ThenBy(x => x.Name),
+            "events_desc" => query.OrderByDescending(x => x.Events.Count).ThenBy(x => x.Name),
+            "events_asc" => query.OrderBy(x => x.Events.Count).ThenBy(x => x.Name),
+            _ => query.OrderBy(x => x.City).ThenBy(x => x.Name)
+        };
 
         return await query
             .Select(x => new VenueListItemViewModel

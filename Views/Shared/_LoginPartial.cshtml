@@ -16,6 +16,13 @@
             <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="Index">My dashboard</a></li>
             <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="Reviews">Reviews</a></li>
             <li><a class="dropdown-item" href="/Identity/Account/Manage">Account settings</a></li>
+            @if (User.IsInRole(ASP_PROJECT.Data.DbInitializer.VenueManagerRole)
+                || User.IsInRole(ASP_PROJECT.Data.DbInitializer.VenueStaffRole)
+                || User.IsInRole(ASP_PROJECT.Data.DbInitializer.SiteModeratorRole)
+                || User.IsInRole(ASP_PROJECT.Data.DbInitializer.AdministratorRole))
+            {
+                <li><a class="dropdown-item" asp-area="" asp-controller="TicketVerification" asp-action="Index">Ticket verification</a></li>
+            }
             @if (User.IsInRole(ASP_PROJECT.Data.DbInitializer.VenueManagerRole))
             {
                 <li><a class="dropdown-item" asp-area="Manager" asp-controller="Dashboard" asp-action="Index">Venue manager panel</a></li>

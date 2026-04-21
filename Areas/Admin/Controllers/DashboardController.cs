@@ -15,6 +15,9 @@ public class DashboardController : Controller
         _eventService = eventService;
     }
 
+    [HttpGet("/Admin")]
+    [HttpGet("/Admin/Dashboard")]
+    [HttpGet("/Admin/Dashboard/Index")]
     public async Task<IActionResult> Index()
     {
         return View(await _eventService.GetAdminDashboardAsync());

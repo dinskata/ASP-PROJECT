@@ -25,6 +25,7 @@
                 <div class="row g-3">
                     <div class="col-md-6"><div class="form-check"><input asp-for="IsBuyer" class="form-check-input" /><label asp-for="IsBuyer" class="form-check-label">Buyer</label></div></div>
                     <div class="col-md-6"><div class="form-check"><input asp-for="IsVenueManager" class="form-check-input" /><label asp-for="IsVenueManager" class="form-check-label">Venue manager</label></div></div>
+                    <div class="col-md-6"><div class="form-check"><input asp-for="IsVenueStaff" class="form-check-input" /><label asp-for="IsVenueStaff" class="form-check-label">Venue staff</label></div></div>
                     <div class="col-md-6"><div class="form-check"><input asp-for="IsSiteModerator" class="form-check-input" /><label asp-for="IsSiteModerator" class="form-check-label">Site moderator</label></div></div>
                     <div class="col-md-6"><div class="form-check"><input asp-for="IsAdministrator" class="form-check-input" /><label asp-for="IsAdministrator" class="form-check-label">Administrator</label></div></div>
                 </div>
@@ -49,6 +50,7 @@
 
             <div class="d-flex gap-3 mt-4">
                 <button class="btn btn-primary">Save changes</button>
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
                 <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
             </div>
         </form>

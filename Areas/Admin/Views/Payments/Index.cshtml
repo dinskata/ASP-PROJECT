@@ -10,7 +10,34 @@
                 <span class="section-label">Administration</span>
                 <h1>Payments and refunds</h1>
             </div>
+            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
         </div>
+        <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search by event, buyer, venue, or card" />
+                </div>
+                <div class="col-md-3">
+                    <select name="statusFilter" class="form-select">
+                        <option value="all" selected="@(ViewBag.StatusFilter == "all")">All statuses</option>
+                        <option value="Paid" selected="@(ViewBag.StatusFilter == "Paid")">Paid</option>
+                        <option value="Refunded" selected="@(ViewBag.StatusFilter == "Refunded")">Refunded</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sortBy" class="form-select">
+                        <option value="newest" selected="@(ViewBag.SortBy == "newest")">Newest first</option>
+                        <option value="oldest" selected="@(ViewBag.SortBy == "oldest")">Oldest first</option>
+                        <option value="amount_desc" selected="@(ViewBag.SortBy == "amount_desc")">Highest amount</option>
+                        <option value="tickets_desc" selected="@(ViewBag.SortBy == "tickets_desc")">Most tickets</option>
+                        <option value="event" selected="@(ViewBag.SortBy == "event")">Event A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
@@ -32,7 +59,7 @@
                             {
                                 <tr>
                                     <td>@item.EventTitle</td>
-                                    <td>@item.BuyerName</td>
+                                    <td><a asp-area="Admin" asp-controller="Users" asp-action="Details" asp-route-id="@item.UserId">@item.BuyerName</a></td>
                                     <td>@item.Tickets</td>
                                     <td>@(item.AmountPaid == 0 ? "Free" : $"EUR {item.AmountPaid:F2}")</td>
                                     <td>@item.PaymentStatus</td>

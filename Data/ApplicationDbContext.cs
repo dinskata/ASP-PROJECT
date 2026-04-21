@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Venue> Venues => Set<Venue>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Registration> Registrations => Set<Registration>();
+    public DbSet<RegistrationTicket> RegistrationTickets => Set<RegistrationTicket>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<UserVenueAssignment> UserVenueAssignments => Set<UserVenueAssignment>();
@@ -32,6 +33,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasIndex(x => new { x.EventId, x.UserId })
             .IsUnique();
 
+        builder.Entity<RegistrationTicket>()
+            .HasIndex(x => new { x.RegistrationId, x.TicketNumber })
+            .IsUnique();
+
+        builder.Entity<RegistrationTicket>()
+            .HasIndex(x => x.TicketCode)
+            .IsUnique();
+
         builder.Entity<Review>()
             .HasIndex(x => new { x.EventId, x.UserId })
             .IsUnique();
@@ -47,6 +56,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Registration>()
             .Property(x => x.AmountPaid)
             .HasColumnType("decimal(10,2)");
+
+        builder.Entity<RegistrationTicket>()
+            .HasOne(x => x.Registration)
+            .WithMany(x => x.RegistrationTickets)
+            .HasForeignKey(x => x.RegistrationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<Registration>()
             .HasOne(x => x.User)

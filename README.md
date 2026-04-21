@@ -1,6 +1,7 @@
 Test User: test@test.com Test1234
-Test Venue Manager:
-SiteModerator: 
+Test Venue Manager: venuemanager@eventure.local Venue1234
+Venue Staff: 
+Site Moderator: moderator@eventure.local Moder1234
 Admin: admin@eventure.local Admin123!
 
 

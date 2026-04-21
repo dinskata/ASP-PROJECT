@@ -1,0 +1,46 @@
+@model ASP_PROJECT.Models.ViewModels.VenueAssignmentEditViewModel
+@{
+    ViewData["Title"] = "Edit Venue Staff Access";
+}
+
+<section class="section-space">
+    <div class="container narrow-content">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Venue management</span>
+                <h1>Edit venue staff access</h1>
+                <p class="text-secondary mb-0">Adjust which of your venues this staff account can support.</p>
+            </div>
+        </div>
+
+        <form method="post" class="card border-0 shadow-sm p-4">
+            @Html.AntiForgeryToken()
+            <input asp-for="UserId" type="hidden" />
+
+            <div class="mb-3">
+                <strong>@Model.UserName</strong>
+                <div class="text-secondary">@Model.UserEmail</div>
+            </div>
+
+            <div class="row g-2">
+                @for (var i = 0; i < Model.AvailableVenues.Count; i++)
+                {
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input asp-for="AvailableVenues[i].IsSelected" class="form-check-input" />
+                            <input asp-for="AvailableVenues[i].Id" type="hidden" />
+                            <input asp-for="AvailableVenues[i].Name" type="hidden" />
+                            <input asp-for="AvailableVenues[i].City" type="hidden" />
+                            <label class="form-check-label" asp-for="AvailableVenues[i].IsSelected">@Model.AvailableVenues[i].Name, @Model.AvailableVenues[i].City</label>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <button class="btn btn-primary">Save staff access</button>
+                <a class="btn btn-outline-secondary" asp-area="Manager" asp-controller="VenueStaff" asp-action="Index">Back</a>
+            </div>
+        </form>
+    </div>
+</section>

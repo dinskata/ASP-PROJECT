@@ -1,3 +1,4 @@
+@using System.Text.Json
 @model ASP_PROJECT.Models.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "My Dashboard";
@@ -46,7 +47,26 @@
                                                 @(item.HasStarted ? "Started" : "Calculating...")
                                             </span>
                                         </td>
-                                        <td>@item.Tickets</td>
+                                        <td>
+                                            <button
+                                                type="button"
+                                                class="btn btn-link ticket-count-trigger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#ticketsModal"
+                                                data-registration-id="@item.RegistrationId"
+                                                data-event-id="@item.EventId"
+                                                data-event-title="@item.EventTitle"
+                                                data-starts-at="@item.StartsAtUtc.ToString("O")"
+                                                data-venue="@item.Venue"
+                                                data-tickets="@item.Tickets"
+                                                data-payment-status="@item.PaymentStatus"
+                                                data-card-last4="@item.CardLast4"
+                                                data-amount-paid="@item.AmountPaid.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                data-holder-name="@Model.UserName"
+                                                data-ticket-payload="@JsonSerializer.Serialize(item.TicketsInfo)">
+                                                @item.Tickets
+                                            </button>
+                                        </td>
                                         <td>@item.Venue</td>
                                         <td>@item.PaymentStatus (@(item.AmountPaid == 0 ? "Free" : $"EUR {item.AmountPaid:F2}"))</td>
                                         <td>@(string.IsNullOrWhiteSpace(item.CardLast4) ? "-" : $"**** {item.CardLast4}")</td>
@@ -106,6 +126,25 @@
     </div>
 </div>
 
+<div class="modal fade" id="ticketsModal" tabindex="-1" aria-labelledby="ticketsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <span class="section-label">Ticket wallet</span>
+                    <h2 class="modal-title fs-4 mb-0" id="ticketsModalLabel">Your event tickets</h2>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary mb-4" id="ticketsModalSummary">Ticket details will appear here.</p>
+                <p class="text-secondary small mb-4">Seat numbers can be adjusted before the event if you contact site support.</p>
+                <div class="tickets-modal-grid" id="ticketsModalGrid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         (function () {
@@ -151,6 +190,396 @@
 
             refreshCountdowns();
             window.setInterval(refreshCountdowns, 1000);
+
+            const escapeHtml = (value) => {
+                const div = document.createElement('div');
+                div.textContent = value ?? '';
+                return div.innerHTML;
+            };
+
+            const formatDisplayDate = (value) => new Intl.DateTimeFormat('en-GB', {
+                dateStyle: 'full',
+                timeStyle: 'short'
+            }).format(new Date(value));
+
+            const formatCurrency = (value) => {
+                const amount = Number.parseFloat(value || '0');
+                return amount === 0
+                    ? 'Free reservation'
+                    : new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR' }).format(amount);
+            };
+
+            const hashSeed = (value) => {
+                let hash = 2166136261;
+                for (let index = 0; index < value.length; index += 1) {
+                    hash ^= value.charCodeAt(index);
+                    hash = Math.imul(hash, 16777619);
+                }
+
+                return hash >>> 0;
+            };
+
+            const createTestQrSvg = (seed) => {
+                const size = 21;
+                const margin = 4;
+                const cell = 6;
+                const occupied = new Set();
+                const rects = [];
+                let state = hashSeed(seed);
+
+                const nextBit = () => {
+                    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+                    return (state >>> 30) & 1;
+                };
+
+                const markCell = (x, y) => {
+                    occupied.add(`${x},${y}`);
+                    rects.push(`<rect x="${(x + margin) * cell}" y="${(y + margin) * cell}" width="${cell}" height="${cell}" rx="1" ry="1" fill="#111827" />`);
+                };
+
+                const addFinder = (offsetX, offsetY) => {
+                    for (let y = 0; y < 7; y += 1) {
+                        for (let x = 0; x < 7; x += 1) {
+                            const isOuter = x === 0 || x === 6 || y === 0 || y === 6;
+                            const isInner = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+                            if (isOuter || isInner) {
+                                markCell(offsetX + x, offsetY + y);
+                            } else {
+                                occupied.add(`${offsetX + x},${offsetY + y}`);
+                            }
+                        }
+                    }
+                };
+
+                addFinder(0, 0);
+                addFinder(size - 7, 0);
+                addFinder(0, size - 7);
+
+                for (let index = 8; index < size - 8; index += 1) {
+                    if (index % 2 === 0) {
+                        markCell(6, index);
+                        markCell(index, 6);
+                    } else {
+                        occupied.add(`6,${index}`);
+                        occupied.add(`${index},6`);
+                    }
+                }
+
+                for (let y = 0; y < size; y += 1) {
+                    for (let x = 0; x < size; x += 1) {
+                        const key = `${x},${y}`;
+                        if (occupied.has(key)) {
+                            continue;
+                        }
+
+                        if (nextBit() === 1) {
+                            markCell(x, y);
+                        }
+                    }
+                }
+
+                const dimension = (size + (margin * 2)) * cell;
+                return `
+                    <svg viewBox="0 0 ${dimension} ${dimension}" role="img" aria-label="Test QR code">
+                        <rect width="${dimension}" height="${dimension}" rx="${cell * 2}" ry="${cell * 2}" fill="#ffffff"></rect>
+                        ${rects.join('')}
+                    </svg>
+                `;
+            };
+
+            const getTicketCode = (registrationId, eventId, ticketIndex) =>
+                `REG${String(registrationId).padStart(5, '0')}-EV${String(eventId).padStart(4, '0')}-T${String(ticketIndex + 1).padStart(2, '0')}`;
+
+            const getVerificationCode = (registrationId, eventId, startsAt, ticketIndex) => {
+                const salt = 'EVENTURE-TICKET-CHECK';
+                const seed = `${salt}|${registrationId}|${eventId}|${ticketIndex}|${startsAt}`;
+                const primary = hashSeed(seed).toString(16).toUpperCase().padStart(8, '0');
+                const secondary = hashSeed(`${seed}|${salt}`).toString(16).toUpperCase().padStart(8, '0');
+                return `${primary}${secondary}`.slice(0, 12);
+            };
+
+            const buildTicketMarkup = (payload, ticketIndex) => {
+                const ticketInfo = payload.ticketsInfo[ticketIndex];
+                const ticketNumber = ticketInfo?.TicketCode || getTicketCode(payload.registrationId, payload.eventId, ticketIndex);
+                const gateOpens = new Date(new Date(payload.startsAt).getTime() - (45 * 60 * 1000));
+                const verificationCode = ticketInfo?.VerificationCode || getVerificationCode(payload.registrationId, payload.eventId, payload.startsAt, ticketIndex);
+                const seatLabel = ticketInfo?.SeatLabel || `Hall ${((payload.registrationId + ticketIndex) % 5) + 1} / Seat ${((payload.registrationId * 13) + ((ticketIndex + 1) * 7)) % 80 + 1}`;
+                const ticketNote = ticketInfo?.TicketNote || '';
+                const qrMarkup = createTestQrSvg(`${ticketNumber}-${verificationCode}-${payload.startsAt}`);
+
+                return `
+                    <article class="ticket-sheet" data-ticket-number="${escapeHtml(ticketNumber)}" data-verification-code="${escapeHtml(verificationCode)}">
+                        <div class="ticket-sheet-header">
+                            <div>
+                                <span class="ticket-chip">Ticket ${ticketIndex + 1}</span>
+                                <h3>${escapeHtml(payload.eventTitle)}</h3>
+                            </div>
+                            <div class="ticket-code-block">
+                                <span>Ticket code</span>
+                                <strong>${escapeHtml(ticketNumber)}</strong>
+                            </div>
+                        </div>
+                        <div class="ticket-sheet-grid">
+                            <div>
+                                <span>Holder</span>
+                                <strong>${escapeHtml(payload.holderName)}</strong>
+                            </div>
+                            <div>
+                                <span>Venue</span>
+                                <strong>${escapeHtml(payload.venue)}</strong>
+                            </div>
+                            <div>
+                                <span>Starts</span>
+                                <strong>${escapeHtml(formatDisplayDate(payload.startsAt))}</strong>
+                            </div>
+                            <div>
+                                <span>Gate opens</span>
+                                <strong>${escapeHtml(formatDisplayDate(gateOpens.toISOString()))}</strong>
+                            </div>
+                            <div>
+                                <span>Section</span>
+                                <strong>${escapeHtml(seatLabel)}</strong>
+                            </div>
+                            <div>
+                                <span>Verification code</span>
+                                <strong>${escapeHtml(verificationCode)}</strong>
+                            </div>
+                            <div>
+                                <span>Payment</span>
+                                <strong>${escapeHtml(payload.paymentStatus)} · ${escapeHtml(formatCurrency(payload.amountPaid))}</strong>
+                            </div>
+                        </div>
+                        <div class="ticket-qr-block">
+                            <div class="ticket-qr-image">${qrMarkup}</div>
+                            <div class="ticket-qr-copy">
+                                <span>Test QR code</span>
+                                <strong>${escapeHtml(verificationCode)}</strong>
+                                <small class="text-secondary">Demo validation only for local testing.</small>
+                            </div>
+                        </div>
+                        <div class="ticket-sheet-footer">
+                            <div>
+                                <p class="mb-0 text-secondary small">Present this ticket at the entrance. Card ending in ${escapeHtml(payload.cardLast4 || '----')} was used for this order.</p>
+                                ${ticketNote ? `<p class="small mt-2 mb-0"><strong>Ticket note:</strong> ${escapeHtml(ticketNote)}</p>` : ''}
+                            </div>
+                            <div class="ticket-sheet-actions">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-ticket-action="pdf">Save as PDF</button>
+                                <button type="button" class="btn btn-primary btn-sm" data-ticket-action="print">Print</button>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            };
+
+            const openTicketDocument = (ticketMarkup, mode) => {
+                const popup = window.open('', '_blank', 'noopener,noreferrer,width=980,height=760');
+                if (!popup) {
+                    return;
+                }
+
+                popup.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Eventure Ticket</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 2rem;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f7f1e7;
+            color: #1f2933;
+        }
+
+        .ticket-print-shell {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .print-note {
+            margin: 0 0 1.25rem;
+            padding: 0.9rem 1rem;
+            border-radius: 0.9rem;
+            background: #fffaf2;
+            border: 1px solid #d6c9b8;
+        }
+
+        .ticket-sheet {
+            background: white;
+            border: 1px solid #d6c9b8;
+            border-radius: 1.4rem;
+            padding: 1.5rem;
+            box-shadow: 0 16px 40px rgba(31, 41, 51, 0.12);
+        }
+
+        .ticket-sheet-header,
+        .ticket-sheet-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .ticket-sheet-header h3 {
+            margin: 0.45rem 0 0;
+            font-size: 1.5rem;
+        }
+
+        .ticket-chip {
+            display: inline-flex;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            background: #e4f3ef;
+            color: #0f766e;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .ticket-code-block {
+            text-align: right;
+        }
+
+        .ticket-code-block span,
+        .ticket-sheet-grid span {
+            display: block;
+            color: #6b7280;
+            font-size: 0.88rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .ticket-code-block strong,
+        .ticket-sheet-grid strong {
+            display: block;
+        }
+
+        .ticket-sheet-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.4rem 0;
+        }
+
+        .ticket-sheet-grid > div {
+            padding: 1rem;
+            border-radius: 1rem;
+            background: #fffaf2;
+            border: 1px solid #ece7df;
+        }
+
+        .ticket-qr-block {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.4rem;
+            border-radius: 1rem;
+            background: #fffaf2;
+            border: 1px solid #ece7df;
+        }
+
+        .ticket-qr-image {
+            width: 132px;
+            height: 132px;
+            flex: 0 0 132px;
+        }
+
+        .ticket-qr-image svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .ticket-qr-copy span,
+        .ticket-qr-copy small {
+            display: block;
+        }
+
+        .ticket-qr-copy span {
+            color: #6b7280;
+            font-size: 0.88rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .ticket-qr-copy strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 0.3rem;
+        }
+
+        @@media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .print-note {
+                display: none;
+            }
+
+            .ticket-sheet {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="ticket-print-shell">
+        <p class="print-note">${mode === 'pdf' ? 'Choose "Save as PDF" in the print dialog to download this ticket.' : 'Use the browser print dialog to print this ticket.'}</p>
+        ${ticketMarkup}
+    </main>
+</body>
+</html>`);
+                popup.document.close();
+                popup.focus();
+                popup.print();
+            };
+
+            const ticketsModal = document.getElementById('ticketsModal');
+            const ticketsModalGrid = document.getElementById('ticketsModalGrid');
+            const ticketsModalSummary = document.getElementById('ticketsModalSummary');
+
+            if (ticketsModal && ticketsModalGrid && ticketsModalSummary) {
+                ticketsModal.addEventListener('show.bs.modal', (event) => {
+                    const trigger = event.relatedTarget;
+                    if (!trigger) {
+                        return;
+                    }
+
+                    const payload = {
+                        registrationId: Number.parseInt(trigger.getAttribute('data-registration-id') || '0', 10),
+                        eventId: Number.parseInt(trigger.getAttribute('data-event-id') || '0', 10),
+                        eventTitle: trigger.getAttribute('data-event-title') || 'Selected event',
+                        startsAt: trigger.getAttribute('data-starts-at') || new Date().toISOString(),
+                        venue: trigger.getAttribute('data-venue') || 'Venue to be confirmed',
+                        tickets: Number.parseInt(trigger.getAttribute('data-tickets') || '0', 10),
+                        paymentStatus: trigger.getAttribute('data-payment-status') || 'Paid',
+                        cardLast4: trigger.getAttribute('data-card-last4') || '',
+                        amountPaid: trigger.getAttribute('data-amount-paid') || '0',
+                        holderName: trigger.getAttribute('data-holder-name') || 'Ticket holder',
+                        ticketsInfo: JSON.parse(trigger.getAttribute('data-ticket-payload') || '[]')
+                    };
+
+                    ticketsModalSummary.textContent = `${payload.tickets} ticket${payload.tickets === 1 ? '' : 's'} for ${payload.eventTitle} at ${payload.venue}.`;
+                    ticketsModalGrid.innerHTML = Array.from({ length: payload.tickets }, (_, index) => buildTicketMarkup(payload, index)).join('');
+                });
+
+                ticketsModal.addEventListener('click', (event) => {
+                    const button = event.target.closest('[data-ticket-action]');
+                    if (!button) {
+                        return;
+                    }
+
+                    const ticketSheet = button.closest('.ticket-sheet');
+                    if (!ticketSheet) {
+                        return;
+                    }
+
+                    const mode = button.getAttribute('data-ticket-action') || 'print';
+                    openTicketDocument(ticketSheet.outerHTML, mode);
+                });
+            }
 
             const refundModal = document.getElementById('refundConfirmModal');
             if (!refundModal) {

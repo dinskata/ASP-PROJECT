@@ -1,0 +1,62 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.UserAdminListItemViewModel>
+@{
+    ViewData["Title"] = "Venue Staff";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Venue management</span>
+                <h1>Venue staff</h1>
+                <p class="text-secondary mb-0">Create staff accounts and assign them only to the venues you manage.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Manager" asp-controller="Dashboard" asp-action="Index">Back to manager panel</a>
+                <a class="btn btn-primary" asp-area="Manager" asp-controller="VenueStaff" asp-action="Create">Add venue staff</a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                @if (!Model.Any())
+                {
+                    <div class="empty-state">
+                        <h2>No venue staff yet</h2>
+                        <p>Create a venue staff account to give someone ticket verification access for your assigned venues.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Assigned venues</th>
+                                    <th>Created</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.FullName</td>
+                                        <td>@item.Email</td>
+                                        <td>@item.AssignedVenuesCount</td>
+                                        <td>@item.CreatedOnUtc.ToLocalTime().ToString("d MMM yyyy")</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-outline-primary" asp-area="Manager" asp-controller="VenueStaff" asp-action="Edit" asp-route-id="@item.Id">Manage venues</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

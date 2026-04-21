@@ -10,12 +10,34 @@
                 <span class="section-label">Administration</span>
                 <h1>Manage events</h1>
             </div>
-            <a class="btn btn-primary" asp-action="Create">Create new</a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
+                <a class="btn btn-primary" asp-action="Create">Create new</a>
+            </div>
         </div>
         <form method="get" class="card border-0 shadow-sm p-3 mb-4">
             <div class="row g-3">
-                <div class="col-md-10">
-                    <input name="searchTerm" value="@Context.Request.Query["searchTerm"]" class="form-control" placeholder="Search by title, category, or venue" />
+                <div class="col-md-5">
+                    <input name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search by title, category, or venue" />
+                </div>
+                <div class="col-md-3">
+                    <select name="statusFilter" class="form-select">
+                        <option value="all" selected="@(ViewBag.StatusFilter == "all")">All statuses</option>
+                        <option value="published" selected="@(ViewBag.StatusFilter == "published")">Published</option>
+                        <option value="draft" selected="@(ViewBag.StatusFilter == "draft")">Draft</option>
+                        <option value="upcoming" selected="@(ViewBag.StatusFilter == "upcoming")">Upcoming</option>
+                        <option value="ended" selected="@(ViewBag.StatusFilter == "ended")">Ended</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sortBy" class="form-select">
+                        <option value="date" selected="@(ViewBag.SortBy == "date")">Date ascending</option>
+                        <option value="date_desc" selected="@(ViewBag.SortBy == "date_desc")">Date descending</option>
+                        <option value="title" selected="@(ViewBag.SortBy == "title")">Title A-Z</option>
+                        <option value="title_desc" selected="@(ViewBag.SortBy == "title_desc")">Title Z-A</option>
+                        <option value="tickets_desc" selected="@(ViewBag.SortBy == "tickets_desc")">Most tickets sold</option>
+                        <option value="reviews_desc" selected="@(ViewBag.SortBy == "reviews_desc")">Most reviews</option>
+                    </select>
                 </div>
                 <div class="col-md-2 d-grid">
                     <button class="btn btn-primary">Search</button>

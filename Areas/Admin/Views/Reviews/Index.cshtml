@@ -10,15 +10,28 @@
                 <span class="section-label">Administration</span>
                 <h1>Review moderation</h1>
             </div>
+            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
         </div>
         <form method="get" class="card border-0 shadow-sm p-3 mb-4">
             <div class="row g-3">
-                <div class="col-md-10">
+                <div class="col-md-4">
+                    <input name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search by event, author, venue, or comment" />
+                </div>
+                <div class="col-md-4">
                     <select name="statusFilter" class="form-select">
                         <option value="all" selected="@(ViewBag.StatusFilter == "all")">All reviews</option>
                         <option value="Pending" selected="@(ViewBag.StatusFilter == "Pending")">Pending</option>
                         <option value="Approved" selected="@(ViewBag.StatusFilter == "Approved")">Approved</option>
                         <option value="Rejected" selected="@(ViewBag.StatusFilter == "Rejected")">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sortBy" class="form-select">
+                        <option value="newest" selected="@(ViewBag.SortBy == "newest")">Newest first</option>
+                        <option value="oldest" selected="@(ViewBag.SortBy == "oldest")">Oldest first</option>
+                        <option value="rating_desc" selected="@(ViewBag.SortBy == "rating_desc")">Highest rating</option>
+                        <option value="rating_asc" selected="@(ViewBag.SortBy == "rating_asc")">Lowest rating</option>
+                        <option value="status" selected="@(ViewBag.SortBy == "status")">Status</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-grid">

@@ -1,0 +1,111 @@
+@model ASP_PROJECT.Models.ViewModels.AdminUserDetailsViewModel
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>@Model.FullName</h1>
+                <p class="text-secondary mb-0">@Model.Email • @Model.RolesDisplay</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
+                <a class="btn btn-outline-secondary" asp-action="Index">Back to users</a>
+                <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.UserId">Manage roles</a>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4"><div class="feature-card"><h5>Created</h5><p>@Model.CreatedOnUtc.ToLocalTime().ToString("f")</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Purchases</h5><p>@Model.Purchases.Count registration(s) on record.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Active tickets</h5><p>@Model.ActiveTickets.Count ticket(s) available for review.</p></div></div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5">Purchases and refunds</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Venue</th>
+                                <th>Starts</th>
+                                <th>Tickets</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Ordered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var purchase in Model.Purchases)
+                            {
+                                <tr>
+                                    <td>@purchase.EventTitle</td>
+                                    <td>@purchase.VenueName</td>
+                                    <td>@purchase.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                    <td>@purchase.Tickets</td>
+                                    <td>@(purchase.AmountPaid == 0 ? "Free" : $"EUR {purchase.AmountPaid:F2}")</td>
+                                    <td>@purchase.PaymentStatus</td>
+                                    <td>@purchase.RegisteredOnUtc.ToLocalTime().ToString("g")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Tickets</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Starts</th>
+                                <th>Ticket code</th>
+                                <th>Verification</th>
+                                <th>Seat</th>
+                                <th>Note</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticket in Model.ActiveTickets)
+                            {
+                                <tr>
+                                    <td>
+                                        <div>@ticket.EventTitle</div>
+                                        <small class="text-secondary">@ticket.VenueName</small>
+                                    </td>
+                                    <td>@ticket.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                    <td>@ticket.TicketCode</td>
+                                    <td>@ticket.VerificationCode</td>
+                                    <td>@ticket.SeatLabel</td>
+                                    <td>@(string.IsNullOrWhiteSpace(ticket.TicketNote) ? "-" : ticket.TicketNote)</td>
+                                    <td>@ticket.PaymentStatus</td>
+                                    <td>
+                                        @if (ticket.CanEdit)
+                                        {
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="EditTicket" asp-route-id="@ticket.TicketId">Edit ticket</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">Locked</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

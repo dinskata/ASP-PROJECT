@@ -16,10 +16,12 @@ public class ReviewsController : Controller
         _managementService = managementService;
     }
 
-    public async Task<IActionResult> Index(string? statusFilter)
+    public async Task<IActionResult> Index(string? statusFilter, string? searchTerm, string? sortBy)
     {
         ViewBag.StatusFilter = string.IsNullOrWhiteSpace(statusFilter) ? "all" : statusFilter;
-        return View(await _managementService.GetReviewsAsync(statusFilter));
+        ViewBag.SearchTerm = searchTerm ?? string.Empty;
+        ViewBag.SortBy = string.IsNullOrWhiteSpace(sortBy) ? "newest" : sortBy;
+        return View(await _managementService.GetReviewsAsync(statusFilter, searchTerm, sortBy));
     }
 
     [HttpPost]

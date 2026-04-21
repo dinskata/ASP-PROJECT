@@ -13,4 +13,5 @@ public class RegistrationSummaryViewModel
     public string PaymentStatus { get; init; } = string.Empty;
     public string CardLast4 { get; init; } = string.Empty;
     public bool CanRequestRefund { get; init; }
+    public IReadOnlyCollection<TicketSummaryViewModel> TicketsInfo { get; init; } = Array.Empty<TicketSummaryViewModel>();
 }

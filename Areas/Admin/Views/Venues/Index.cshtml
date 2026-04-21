@@ -10,8 +10,31 @@
                 <span class="section-label">Administration</span>
                 <h1>Manage venues</h1>
             </div>
-            <a class="btn btn-primary" asp-action="Create">Create venue</a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
+                <a class="btn btn-primary" asp-action="Create">Create venue</a>
+            </div>
         </div>
+        <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search by venue name or city" />
+                </div>
+                <div class="col-md-4">
+                    <select name="sortBy" class="form-select">
+                        <option value="city" selected="@(ViewBag.SortBy == "city")">City A-Z</option>
+                        <option value="city_desc" selected="@(ViewBag.SortBy == "city_desc")">City Z-A</option>
+                        <option value="name" selected="@(ViewBag.SortBy == "name")">Name A-Z</option>
+                        <option value="name_desc" selected="@(ViewBag.SortBy == "name_desc")">Name Z-A</option>
+                        <option value="capacity_desc" selected="@(ViewBag.SortBy == "capacity_desc")">Highest capacity</option>
+                        <option value="events_desc" selected="@(ViewBag.SortBy == "events_desc")">Most events</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">

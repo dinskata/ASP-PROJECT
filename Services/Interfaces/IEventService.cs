@@ -6,7 +6,7 @@ namespace ASP_PROJECT.Services.Interfaces;
 public interface IEventService
 {
     Task<EventListViewModel> GetPublishedEventsAsync(string? searchTerm, int? categoryId, string? statusFilter, int pageNumber, int pageSize);
-    Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null);
+    Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null, string? statusFilter = null, string? sortBy = null);
     Task<EventDetailsViewModel?> GetDetailsAsync(int id);
     Task<IReadOnlyCollection<Category>> GetCategoriesAsync();
     Task<IReadOnlyCollection<Venue>> GetVenuesAsync();

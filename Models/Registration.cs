@@ -30,4 +30,6 @@ public class Registration
     public decimal AmountPaid { get; set; }
 
     public DateTime? RefundedOnUtc { get; set; }
+
+    public ICollection<RegistrationTicket> RegistrationTickets { get; set; } = new List<RegistrationTicket>();
 }

@@ -42,7 +42,7 @@ public class DashboardServiceTests
                 new ReviewableEventViewModel { EventId = 12, HasExistingReview = false }
             });
         public Task<ASP_PROJECT.Models.ViewModels.EventListViewModel> GetPublishedEventsAsync(string? searchTerm, int? categoryId, string? statusFilter, int pageNumber, int pageSize) => throw new NotImplementedException();
-        public Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null) => throw new NotImplementedException();
+        public Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null, string? statusFilter = null, string? sortBy = null) => throw new NotImplementedException();
         public Task<ASP_PROJECT.Models.ViewModels.EventDetailsViewModel?> GetDetailsAsync(int id) => throw new NotImplementedException();
         public Task<IReadOnlyCollection<ASP_PROJECT.Models.Category>> GetCategoriesAsync() => throw new NotImplementedException();
         public Task<IReadOnlyCollection<ASP_PROJECT.Models.Venue>> GetVenuesAsync() => throw new NotImplementedException();

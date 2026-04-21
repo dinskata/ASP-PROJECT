@@ -17,9 +17,11 @@ public class VenuesController : Controller
         _venueService = venueService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? searchTerm, string? sortBy)
     {
-        return View(await _venueService.GetAllForManagementAsync());
+        ViewBag.SearchTerm = searchTerm ?? string.Empty;
+        ViewBag.SortBy = string.IsNullOrWhiteSpace(sortBy) ? "city" : sortBy;
+        return View(await _venueService.GetAllForManagementAsync(null, searchTerm, sortBy));
     }
 
     public IActionResult Create()

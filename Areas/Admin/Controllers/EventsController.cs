@@ -16,9 +16,12 @@ public class EventsController : Controller
         _eventService = eventService;
     }
 
-    public async Task<IActionResult> Index(string? searchTerm)
+    public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, string? sortBy)
     {
-        return View(await _eventService.GetManagementEventsAsync(searchTerm));
+        ViewBag.SearchTerm = searchTerm ?? string.Empty;
+        ViewBag.StatusFilter = string.IsNullOrWhiteSpace(statusFilter) ? "all" : statusFilter;
+        ViewBag.SortBy = string.IsNullOrWhiteSpace(sortBy) ? "date" : sortBy;
+        return View(await _eventService.GetManagementEventsAsync(searchTerm, null, statusFilter, sortBy));
     }
 
     public async Task<IActionResult> Create()

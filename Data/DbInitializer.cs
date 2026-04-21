@@ -1,4 +1,5 @@
 using ASP_PROJECT.Models;
+using ASP_PROJECT.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,11 +11,14 @@ public static class DbInitializer
     public const string AdministratorRole = "Administrator";
     public const string BuyerRole = "Buyer";
     public const string VenueManagerRole = "Venue Manager";
+    public const string VenueStaffRole = "Venue Staff";
     public const string SiteModeratorRole = "Site Moderator";
     public const string TestUserEmail = "test@test.com";
     public const string TestUserPassword = "Test1234";
     public const string TestVenueManagerEmail = "venuemanager@eventure.local";
     public const string TestVenueManagerPassword = "Venue1234";
+    public const string VenueStaffEmail = "venuestaff@eventure.local";
+    public const string VenueStaffPassword = "Staff1234";
     public const string SiteModeratorEmail = "moderator@eventure.local";
     public const string SiteModeratorPassword = "Moder1234";
     public const string AdminEmail = "admin@eventure.local";
@@ -37,7 +41,7 @@ public static class DbInitializer
             dbContext.Database.SetConnectionString(DefaultLocalDbConnection);
         }
 
-        foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole, SiteModeratorRole })
+        foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole, VenueStaffRole, SiteModeratorRole })
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
@@ -450,6 +454,44 @@ public static class DbInitializer
             }
         }
 
+        var venueStaffUser = await userManager.FindByEmailAsync(VenueStaffEmail);
+        if (venueStaffUser is null)
+        {
+            venueStaffUser = new ApplicationUser
+            {
+                UserName = VenueStaffEmail,
+                Email = VenueStaffEmail,
+                EmailConfirmed = true,
+                FullName = "Petar Ivanov"
+            };
+
+            var venueStaffResult = await userManager.CreateAsync(venueStaffUser, VenueStaffPassword);
+            if (!venueStaffResult.Succeeded)
+            {
+                throw new InvalidOperationException("Failed to create seeded venue staff user.");
+            }
+        }
+
+        if (venueStaffUser.FullName != "Petar Ivanov")
+        {
+            venueStaffUser.FullName = "Petar Ivanov";
+            await userManager.UpdateAsync(venueStaffUser);
+        }
+
+        if (!await userManager.IsInRoleAsync(venueStaffUser, VenueStaffRole))
+        {
+            await userManager.AddToRoleAsync(venueStaffUser, VenueStaffRole);
+        }
+
+        if (!await dbContext.UserVenueAssignments.AnyAsync(x => x.UserId == venueStaffUser.Id && x.VenueId == skyline.Id))
+        {
+            dbContext.UserVenueAssignments.Add(new UserVenueAssignment
+            {
+                UserId = venueStaffUser.Id,
+                VenueId = skyline.Id
+            });
+        }
+
         var siteModeratorUser = await userManager.FindByEmailAsync(SiteModeratorEmail);
         if (siteModeratorUser is null)
         {
@@ -600,6 +642,33 @@ public static class DbInitializer
                 Tickets = 1,
                 RegisteredOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(-4)
             });
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        var registrations = await dbContext.Registrations
+            .Include(x => x.Event)
+            .Include(x => x.RegistrationTickets)
+            .ToListAsync();
+
+        foreach (var registration in registrations.Where(x => x.Event is not null))
+        {
+            for (var ticketNumber = 1; ticketNumber <= registration.Tickets; ticketNumber++)
+            {
+                if (registration.RegistrationTickets.Any(x => x.TicketNumber == ticketNumber))
+                {
+                    continue;
+                }
+
+                dbContext.RegistrationTickets.Add(new RegistrationTicket
+                {
+                    RegistrationId = registration.Id,
+                    TicketNumber = ticketNumber,
+                    TicketCode = TicketIdentityHelper.GetTicketCode(registration.Id, registration.EventId, ticketNumber - 1),
+                    VerificationCode = TicketIdentityHelper.GetVerificationCode(registration.Id, registration.EventId, registration.Event!.StartsAtUtc, ticketNumber - 1),
+                    SeatLabel = TicketIdentityHelper.GetSeatLabel(registration.Id, ticketNumber - 1)
+                });
+            }
         }
 
         if (!await dbContext.Reviews.AnyAsync(x => x.EventId == pastFrontendEvent.Id && x.UserId == demoBuyer.Id))

@@ -1,4 +1,5 @@
 using ASP_PROJECT.Data;
+using ASP_PROJECT.Helpers;
 using ASP_PROJECT.Models;
 using ASP_PROJECT.Models.ViewModels;
 using ASP_PROJECT.Services.Interfaces;
@@ -101,7 +102,7 @@ public class EventService : IEventService
         };
     }
 
-    public async Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null)
+    public async Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null, string? statusFilter = null, string? sortBy = null)
     {
         var query = _dbContext.Events
             .AsNoTracking()
@@ -129,8 +130,31 @@ public class EventService : IEventService
                 x.Venue!.Name.ToLower().Contains(normalized));
         }
 
+        if (!string.IsNullOrWhiteSpace(statusFilter) && !string.Equals(statusFilter, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            query = statusFilter.Trim().ToLowerInvariant() switch
+            {
+                "published" => query.Where(x => x.IsPublished),
+                "draft" => query.Where(x => !x.IsPublished),
+                "upcoming" => query.Where(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) > DateTime.UtcNow),
+                "ended" => query.Where(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= DateTime.UtcNow),
+                _ => query
+            };
+        }
+
+        query = (sortBy ?? "date").ToLowerInvariant() switch
+        {
+            "date_desc" => query.OrderByDescending(x => x.StartsAtUtc),
+            "title" => query.OrderBy(x => x.Title),
+            "title_desc" => query.OrderByDescending(x => x.Title),
+            "tickets_desc" => query.OrderByDescending(x => x.Registrations.Sum(r => r.Tickets)).ThenBy(x => x.StartsAtUtc),
+            "tickets_asc" => query.OrderBy(x => x.Registrations.Sum(r => r.Tickets)).ThenBy(x => x.StartsAtUtc),
+            "reviews_desc" => query.OrderByDescending(x => x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved)).ThenBy(x => x.StartsAtUtc),
+            "reviews_asc" => query.OrderBy(x => x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved)).ThenBy(x => x.StartsAtUtc),
+            _ => query.OrderBy(x => x.StartsAtUtc)
+        };
+
         return await query
-            .OrderBy(x => x.StartsAtUtc)
             .Select(x => new ManagementEventListItemViewModel
             {
                 Id = x.Id,
@@ -320,9 +344,10 @@ public class EventService : IEventService
             return false;
         }
 
+        Registration registrationEntity;
         if (existingRegistration is null)
         {
-            _dbContext.Registrations.Add(new Registration
+            registrationEntity = new Registration
             {
                 EventId = model.EventId,
                 UserId = userId,
@@ -331,20 +356,24 @@ public class EventService : IEventService
                 CardLast4 = model.CardNumber[^4..],
                 PaymentStatus = "Paid",
                 AmountPaid = model.Tickets * eventEntity.Price
-            });
+            };
+            _dbContext.Registrations.Add(registrationEntity);
         }
         else
         {
-            existingRegistration.Tickets = model.Tickets;
-            existingRegistration.CardholderName = model.CardholderName.Trim();
-            existingRegistration.CardLast4 = model.CardNumber[^4..];
-            existingRegistration.PaymentStatus = "Paid";
-            existingRegistration.AmountPaid = model.Tickets * eventEntity.Price;
-            existingRegistration.RegisteredOnUtc = DateTime.UtcNow;
-            existingRegistration.RefundedOnUtc = null;
+            registrationEntity = existingRegistration;
+            registrationEntity.Tickets = model.Tickets;
+            registrationEntity.CardholderName = model.CardholderName.Trim();
+            registrationEntity.CardLast4 = model.CardNumber[^4..];
+            registrationEntity.PaymentStatus = "Paid";
+            registrationEntity.AmountPaid = model.Tickets * eventEntity.Price;
+            registrationEntity.RegisteredOnUtc = DateTime.UtcNow;
+            registrationEntity.RefundedOnUtc = null;
         }
 
         eventEntity.SeatsAvailable -= model.Tickets;
+        await _dbContext.SaveChangesAsync();
+        await SyncRegistrationTicketsAsync(registrationEntity, eventEntity);
         await _dbContext.SaveChangesAsync();
 
         var actorName = await GetUserDisplayNameAsync(userId);
@@ -435,6 +464,7 @@ public class EventService : IEventService
             .Where(x => x.UserId == userId)
             .Include(x => x.Event)
                 .ThenInclude(x => x!.Venue)
+            .Include(x => x.RegistrationTickets)
             .OrderBy(x => x.Event!.StartsAtUtc)
             .Select(x => new RegistrationSummaryViewModel
             {
@@ -447,7 +477,19 @@ public class EventService : IEventService
                 AmountPaid = x.AmountPaid,
                 PaymentStatus = x.PaymentStatus,
                 CardLast4 = x.CardLast4,
-                CanRequestRefund = x.PaymentStatus == "Paid" && x.Event.StartsAtUtc > DateTime.UtcNow.AddHours(48)
+                CanRequestRefund = x.PaymentStatus == "Paid" && x.Event.StartsAtUtc > DateTime.UtcNow.AddHours(48),
+                TicketsInfo = x.RegistrationTickets
+                    .OrderBy(t => t.TicketNumber)
+                    .Select(t => new TicketSummaryViewModel
+                    {
+                        TicketId = t.Id,
+                        TicketNumber = t.TicketNumber,
+                        TicketCode = t.TicketCode,
+                        VerificationCode = t.VerificationCode,
+                        SeatLabel = t.SeatLabel,
+                        TicketNote = t.TicketNote
+                    })
+                    .ToList()
             })
             .ToListAsync();
     }
@@ -504,6 +546,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Venue)
                 .Include(x => x.Reviews)
+                .Where(x => x.IsPublished && x.StartsAtUtc.AddMinutes(x.DurationMinutes) > DateTime.UtcNow)
                 .OrderBy(x => x.StartsAtUtc)
                 .Take(5)
                 .Select(x => new EventListItemViewModel
@@ -546,6 +589,43 @@ public class EventService : IEventService
             .Where(x => x.Id == userId)
             .Select(x => x.FullName)
             .SingleOrDefaultAsync() ?? "User";
+
+    private async Task SyncRegistrationTicketsAsync(Registration registration, Event eventEntity)
+    {
+        var existingTickets = await _dbContext.RegistrationTickets
+            .Where(x => x.RegistrationId == registration.Id)
+            .OrderBy(x => x.TicketNumber)
+            .ToListAsync();
+
+        foreach (var ticket in existingTickets.Where(x => x.TicketNumber > registration.Tickets).ToList())
+        {
+            _dbContext.RegistrationTickets.Remove(ticket);
+        }
+
+        for (var ticketNumber = 1; ticketNumber <= registration.Tickets; ticketNumber++)
+        {
+            var existingTicket = existingTickets.SingleOrDefault(x => x.TicketNumber == ticketNumber);
+            if (existingTicket is null)
+            {
+                _dbContext.RegistrationTickets.Add(new RegistrationTicket
+                {
+                    RegistrationId = registration.Id,
+                    TicketNumber = ticketNumber,
+                    TicketCode = TicketIdentityHelper.GetTicketCode(registration.Id, registration.EventId, ticketNumber - 1),
+                    VerificationCode = TicketIdentityHelper.GetVerificationCode(registration.Id, registration.EventId, eventEntity.StartsAtUtc, ticketNumber - 1),
+                    SeatLabel = TicketIdentityHelper.GetSeatLabel(registration.Id, ticketNumber - 1)
+                });
+                continue;
+            }
+
+            existingTicket.TicketCode = TicketIdentityHelper.GetTicketCode(registration.Id, registration.EventId, ticketNumber - 1);
+            existingTicket.VerificationCode = TicketIdentityHelper.GetVerificationCode(registration.Id, registration.EventId, eventEntity.StartsAtUtc, ticketNumber - 1);
+            if (string.IsNullOrWhiteSpace(existingTicket.SeatLabel))
+            {
+                existingTicket.SeatLabel = TicketIdentityHelper.GetSeatLabel(registration.Id, ticketNumber - 1);
+            }
+        }
+    }
 
     private async Task LogAuditAsync(string entityType, string actionType, string? actorId, string? actorName, string summary, int? entityId)
     {

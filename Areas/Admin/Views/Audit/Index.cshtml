@@ -1,4 +1,4 @@
-@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.AuditLogListItemViewModel>
+@model ASP_PROJECT.Models.ViewModels.AuditHistoryPageViewModel
 @{
     ViewData["Title"] = "Audit History";
 }
@@ -10,7 +10,39 @@
                 <span class="section-label">Administration</span>
                 <h1>Audit history</h1>
             </div>
+            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
         </div>
+        <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+            <input type="hidden" name="ticketSearchTerm" value="@ViewBag.TicketSearchTerm" />
+            <input type="hidden" name="ticketStatusFilter" value="@ViewBag.TicketStatusFilter" />
+            <input type="hidden" name="ticketSortBy" value="@ViewBag.TicketSortBy" />
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search by area, action, actor, or summary" />
+                </div>
+                <div class="col-md-3">
+                    <select name="entityFilter" class="form-select">
+                        <option value="all" selected="@(ViewBag.EntityFilter == "all")">All entities</option>
+                        <option value="Event" selected="@(ViewBag.EntityFilter == "Event")">Events</option>
+                        <option value="Venue" selected="@(ViewBag.EntityFilter == "Venue")">Venues</option>
+                        <option value="Review" selected="@(ViewBag.EntityFilter == "Review")">Reviews</option>
+                        <option value="Payment" selected="@(ViewBag.EntityFilter == "Payment")">Payments</option>
+                        <option value="User" selected="@(ViewBag.EntityFilter == "User")">Users</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sortBy" class="form-select">
+                        <option value="newest" selected="@(ViewBag.SortBy == "newest")">Newest first</option>
+                        <option value="oldest" selected="@(ViewBag.SortBy == "oldest")">Oldest first</option>
+                        <option value="entity" selected="@(ViewBag.SortBy == "entity")">Entity</option>
+                        <option value="actor" selected="@(ViewBag.SortBy == "actor")">Actor</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
@@ -25,7 +57,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var entry in Model)
+                            @foreach (var entry in Model.Entries)
                             {
                                 <tr>
                                     <td>@entry.CreatedOnUtc.ToLocalTime().ToString("g")</td>
@@ -33,6 +65,72 @@
                                     <td>@entry.ActionType</td>
                                     <td>@entry.PerformedByName</td>
                                     <td>@entry.Summary</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <form method="get" class="card border-0 shadow-sm p-3 mt-4 mb-4">
+            <input type="hidden" name="searchTerm" value="@ViewBag.SearchTerm" />
+            <input type="hidden" name="entityFilter" value="@ViewBag.EntityFilter" />
+            <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input name="ticketSearchTerm" value="@ViewBag.TicketSearchTerm" class="form-control" placeholder="Search tickets by code, buyer, event, or venue" />
+                </div>
+                <div class="col-md-3">
+                    <select name="ticketStatusFilter" class="form-select">
+                        <option value="all" selected="@(ViewBag.TicketStatusFilter == "all")">All ticket statuses</option>
+                        <option value="Paid" selected="@(ViewBag.TicketStatusFilter == "Paid")">Paid</option>
+                        <option value="Refunded" selected="@(ViewBag.TicketStatusFilter == "Refunded")">Refunded</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="ticketSortBy" class="form-select">
+                        <option value="newest" selected="@(ViewBag.TicketSortBy == "newest")">Newest first</option>
+                        <option value="event" selected="@(ViewBag.TicketSortBy == "event")">Event</option>
+                        <option value="buyer" selected="@(ViewBag.TicketSortBy == "buyer")">Buyer</option>
+                        <option value="code" selected="@(ViewBag.TicketSortBy == "code")">Ticket code</option>
+                        <option value="status" selected="@(ViewBag.TicketSortBy == "status")">Status</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Filter tickets</button>
+                </div>
+            </div>
+        </form>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Issued tickets</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ticket code</th>
+                                <th>Verification</th>
+                                <th>Event</th>
+                                <th>Buyer</th>
+                                <th>Seat</th>
+                                <th>Status</th>
+                                <th>Starts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticket in Model.Tickets)
+                            {
+                                <tr>
+                                    <td>@ticket.TicketCode</td>
+                                    <td>@ticket.VerificationCode</td>
+                                    <td>
+                                        <div>@ticket.EventTitle</div>
+                                        <small class="text-secondary">@ticket.VenueName</small>
+                                    </td>
+                                    <td>@ticket.BuyerName</td>
+                                    <td>@ticket.SeatLabel</td>
+                                    <td>@ticket.PaymentStatus</td>
+                                    <td>@ticket.StartsAtUtc.ToLocalTime().ToString("g")</td>
                                 </tr>
                             }
                         </tbody>

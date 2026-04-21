@@ -15,9 +15,12 @@ public class PaymentsController : Controller
         _managementService = managementService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, string? sortBy)
     {
-        return View(await _managementService.GetPaymentsAsync());
+        ViewBag.SearchTerm = searchTerm ?? string.Empty;
+        ViewBag.StatusFilter = string.IsNullOrWhiteSpace(statusFilter) ? "all" : statusFilter;
+        ViewBag.SortBy = string.IsNullOrWhiteSpace(sortBy) ? "newest" : sortBy;
+        return View(await _managementService.GetPaymentsAsync(searchTerm, statusFilter, sortBy));
     }
 
     [HttpPost]

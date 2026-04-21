@@ -17,6 +17,7 @@ public class UserAdminEditViewModel
 
     public bool IsBuyer { get; set; }
     public bool IsVenueManager { get; set; }
+    public bool IsVenueStaff { get; set; }
     public bool IsSiteModerator { get; set; }
     public bool IsAdministrator { get; set; }
 

@@ -15,8 +15,19 @@ public class AuditController : Controller
         _managementService = managementService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? searchTerm, string? entityFilter, string? sortBy, string? ticketSearchTerm, string? ticketStatusFilter, string? ticketSortBy)
     {
-        return View(await _managementService.GetAuditLogsAsync());
+        ViewBag.SearchTerm = searchTerm ?? string.Empty;
+        ViewBag.EntityFilter = string.IsNullOrWhiteSpace(entityFilter) ? "all" : entityFilter;
+        ViewBag.SortBy = string.IsNullOrWhiteSpace(sortBy) ? "newest" : sortBy;
+        ViewBag.TicketSearchTerm = ticketSearchTerm ?? string.Empty;
+        ViewBag.TicketStatusFilter = string.IsNullOrWhiteSpace(ticketStatusFilter) ? "all" : ticketStatusFilter;
+        ViewBag.TicketSortBy = string.IsNullOrWhiteSpace(ticketSortBy) ? "newest" : ticketSortBy;
+
+        return View(new ASP_PROJECT.Models.ViewModels.AuditHistoryPageViewModel
+        {
+            Entries = await _managementService.GetAuditLogsAsync(searchTerm, entityFilter, sortBy),
+            Tickets = await _managementService.GetTicketRegistryAsync(ticketSearchTerm, ticketStatusFilter, ticketSortBy)
+        });
     }
 }

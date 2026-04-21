@@ -3,6 +3,7 @@ namespace ASP_PROJECT.Models.ViewModels;
 public class PaymentManagementItemViewModel
 {
     public int RegistrationId { get; init; }
+    public string UserId { get; init; } = string.Empty;
     public int EventId { get; init; }
     public string EventTitle { get; init; } = string.Empty;
     public string BuyerName { get; init; } = string.Empty;

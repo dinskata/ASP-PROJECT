@@ -298,6 +298,54 @@ namespace ASP_PROJECT.Data.Migrations
                     b.ToTable("Registrations");
                 });
 
+            modelBuilder.Entity("ASP_PROJECT.Models.RegistrationTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("IssuedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RegistrationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SeatLabel")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("TicketCode")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<string>("TicketNote")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("nvarchar(180)");
+
+                    b.Property<int>("TicketNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VerificationCode")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketCode")
+                        .IsUnique();
+
+                    b.HasIndex("RegistrationId", "TicketNumber")
+                        .IsUnique();
+
+                    b.ToTable("RegistrationTickets");
+                });
+
             modelBuilder.Entity("ASP_PROJECT.Models.Review", b =>
                 {
                     b.Property<int>("Id")
@@ -585,6 +633,17 @@ namespace ASP_PROJECT.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ASP_PROJECT.Models.RegistrationTicket", b =>
+                {
+                    b.HasOne("ASP_PROJECT.Models.Registration", "Registration")
+                        .WithMany("RegistrationTickets")
+                        .HasForeignKey("RegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Registration");
+                });
+
             modelBuilder.Entity("ASP_PROJECT.Models.Review", b =>
                 {
                     b.HasOne("ASP_PROJECT.Models.Event", "Event")
@@ -693,6 +752,11 @@ namespace ASP_PROJECT.Data.Migrations
                     b.Navigation("Registrations");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("ASP_PROJECT.Models.Registration", b =>
+                {
+                    b.Navigation("RegistrationTickets");
                 });
 
             modelBuilder.Entity("ASP_PROJECT.Models.Venue", b =>
