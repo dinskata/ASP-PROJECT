@@ -18,7 +18,7 @@ public class EventsController : Controller
 
     public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int page = 1)
     {
-        return View(await _eventService.GetPublishedEventsAsync(searchTerm, categoryId, page, 10));
+        return View(await _eventService.GetPublishedEventsAsync(searchTerm, categoryId, "all", page, 10));
     }
 
     public async Task<IActionResult> Create()

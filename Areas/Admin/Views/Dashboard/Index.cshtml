@@ -10,7 +10,10 @@
                 <span class="section-label">Administration</span>
                 <h1>Platform dashboard</h1>
             </div>
-            <a class="btn btn-primary" asp-area="Admin" asp-controller="Events" asp-action="Create">Create Event</a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Venues" asp-action="Index">Manage Venues</a>
+                <a class="btn btn-primary" asp-area="Admin" asp-controller="Events" asp-action="Create">Create Event</a>
+            </div>
         </div>
         <div class="row g-4 mb-4">
             <div class="col-md-3"><div class="feature-card"><h5>Events</h5><p>@Model.EventsCount total items.</p></div></div>

@@ -14,9 +14,9 @@ public class EventsController : Controller
         _eventService = eventService;
     }
 
-    public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int page = 1)
+    public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? statusFilter, int page = 1)
     {
-        return View(await _eventService.GetPublishedEventsAsync(searchTerm, categoryId, page, 6));
+        return View(await _eventService.GetPublishedEventsAsync(searchTerm, categoryId, statusFilter, 1, 100));
     }
 
     public async Task<IActionResult> Details(int id)
@@ -48,8 +48,8 @@ public class EventsController : Controller
 
         var success = await _eventService.RegisterAsync(userId, model);
         TempData["StatusMessage"] = success
-            ? "Registration completed successfully."
-            : "Registration could not be completed. Check ticket count or existing registration.";
+            ? "Payment completed successfully. Your tickets have been purchased."
+            : "Purchase could not be completed. Check ticket availability, card details, or whether the event has already started.";
         return RedirectToAction(nameof(Details), new { id = model.EventId });
     }
 
@@ -73,7 +73,7 @@ public class EventsController : Controller
         var success = await _eventService.AddReviewAsync(userId, model);
         TempData["StatusMessage"] = success
             ? "Review submitted."
-            : "Only registered attendees can submit one review.";
+            : "Only registered attendees can submit one review after the event has ended.";
         return RedirectToAction(nameof(Details), new { id = model.EventId });
     }
 }

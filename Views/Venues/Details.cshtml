@@ -17,14 +17,42 @@
             </div>
             <div class="col-lg-8">
                 <h2 class="h4 mb-3">Upcoming events</h2>
-                <div class="row g-4">
-                    @foreach (var item in Model.UpcomingEvents)
-                    {
-                        <div class="col-md-6">
-                            <partial name="_EventCard" model="item" />
-                        </div>
-                    }
-                </div>
+                @if (Model.UpcomingEvents.Any())
+                {
+                    <div class="row g-4">
+                        @foreach (var item in Model.UpcomingEvents)
+                        {
+                            <div class="col-md-6">
+                                <partial name="_EventCard" model="item" />
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="text-secondary mb-0">There are no upcoming events scheduled for this venue right now.</p>
+                    </div>
+                }
+
+                <h2 class="h4 mt-5 mb-3">Ended events</h2>
+                @if (Model.EndedEvents.Any())
+                {
+                    <div class="row g-4">
+                        @foreach (var item in Model.EndedEvents)
+                        {
+                            <div class="col-md-6">
+                                <partial name="_EventCard" model="item" />
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="text-secondary mb-0">No ended events are available for this venue yet.</p>
+                    </div>
+                }
             </div>
         </div>
     </div>

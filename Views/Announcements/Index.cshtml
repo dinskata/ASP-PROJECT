@@ -1,3 +1,4 @@
+@using System.Globalization
 @model ASP_PROJECT.Models.ViewModels.AnnouncementListViewModel
 @{
     ViewData["Title"] = "Announcements";
@@ -43,7 +44,7 @@
                                 <div class="announcement-entry">
                                     <div class="announcement-entry-header">
                                         <a asp-action="Details" asp-route-id="@item.Id">@item.Title</a>
-                                        <span class="text-secondary small">@item.PublishedOnUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                        <span class="text-secondary small">@item.PublishedOnUtc.ToLocalTime().ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</span>
                                     </div>
                                     <p class="mb-0 text-secondary">@item.Content</p>
                                 </div>

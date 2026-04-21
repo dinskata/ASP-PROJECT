@@ -12,13 +12,13 @@
             </div>
         </div>
         <div class="row g-4 mb-4">
-            <div class="col-md-4"><div class="feature-card"><h5>Registrations</h5><p>@Model.RegistrationsCount upcoming event bookings.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Purchases</h5><p>@Model.RegistrationsCount ticket orders linked to your account.</p></div></div>
             <div class="col-md-4"><div class="feature-card"><h5>Reviews</h5><p>@Model.ReviewsCount submitted attendee reviews.</p></div></div>
-            <div class="col-md-4"><div class="feature-card"><h5>Account</h5><p>Identity-managed secure access and role handling.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Profile</h5><p>Update account details, manage security, and keep your attendee information current.</p></div></div>
         </div>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h2 class="h5">My registrations</h2>
+                <h2 class="h5">My ticket purchases</h2>
                 @if (Model.UpcomingRegistrations.Any())
                 {
                     <div class="table-responsive">
@@ -29,6 +29,9 @@
                                     <th>Date</th>
                                     <th>Tickets</th>
                                     <th>Venue</th>
+                                    <th>Payment</th>
+                                    <th>Card</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -39,6 +42,22 @@
                                         <td>@item.StartsAtUtc.ToLocalTime().ToString("g")</td>
                                         <td>@item.Tickets</td>
                                         <td>@item.Venue</td>
+                                        <td>@item.PaymentStatus (@(item.AmountPaid == 0 ? "Free" : $"EUR {item.AmountPaid:F2}"))</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.CardLast4) ? "-" : $"**** {item.CardLast4}")</td>
+                                        <td>
+                                            @if (item.CanRequestRefund)
+                                            {
+                                                <form asp-action="Refund" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="registrationId" value="@item.RegistrationId" />
+                                                    <button class="btn btn-sm btn-outline-danger">Request refund</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary small">Refund unavailable</span>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -47,7 +66,7 @@
                 }
                 else
                 {
-                    <p class="mb-0 text-secondary">You have no registrations yet.</p>
+                    <p class="mb-0 text-secondary">You have no ticket purchases yet.</p>
                 }
             </div>
         </div>

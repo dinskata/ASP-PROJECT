@@ -1,13 +1,6 @@
 @model ASP_PROJECT.Models.ViewModels.EventListViewModel
 @{
     ViewData["Title"] = "Events";
-    ViewData["Action"] = "Index";
-    ViewData["Controller"] = "Events";
-    ViewData["RouteValues"] = new Dictionary<string, string>
-    {
-        ["searchTerm"] = Model.SearchTerm,
-        ["categoryId"] = Model.CategoryId?.ToString() ?? string.Empty
-    };
 }
 
 <section class="section-space">
@@ -20,16 +13,23 @@
         </div>
         <form method="get" class="card border-0 shadow-sm p-3 mb-4">
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <input name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Search by title, city, or category" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <select name="categoryId" class="form-select">
                         <option value="">All categories</option>
                         @foreach (var category in Model.Categories)
                         {
                             <option value="@category.Id" selected="@(Model.CategoryId == category.Id)">@category.Name</option>
                         }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="statusFilter" class="form-select">
+                        <option value="all" selected="@(Model.StatusFilter == "all")">Upcoming and ended</option>
+                        <option value="upcoming" selected="@(Model.StatusFilter == "upcoming")">Upcoming only</option>
+                        <option value="ended" selected="@(Model.StatusFilter == "ended")">Ended only</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-grid">
@@ -46,7 +46,5 @@
                 </div>
             }
         </div>
-
-        <partial name="_PagedNavigation" model="Model.Result" />
     </div>
 </section>

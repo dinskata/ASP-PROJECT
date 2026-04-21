@@ -40,9 +40,8 @@
                     </div>
                     <button id="login-submit" type="submit" class="btn btn-primary btn-lg w-100">Log in</button>
                     <div class="auth-links">
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
                         <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
-                        <a asp-page="./ResendEmailConfirmation">Resend confirmation email</a>
+                        <a asp-controller="Home" asp-action="Contact">Need help signing in? Contact us</a>
                     </div>
                 </form>
             </div>

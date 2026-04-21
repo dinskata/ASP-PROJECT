@@ -25,7 +25,7 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         ViewData["Announcements"] = await _announcementService.GetAllAsync();
-        return View(await _eventService.GetPublishedEventsAsync(null, null, 1, 3));
+        return View(await _eventService.GetPublishedEventsAsync(null, null, "upcoming", 1, 3));
     }
 
     public IActionResult Privacy() => View();
@@ -53,11 +53,23 @@ public class HomeController : Controller
     {
         return code switch
         {
+            400 => View("BadRequest", new ErrorViewModel
+            {
+                StatusCode = 400,
+                Title = "Bad request",
+                Message = "The request could not be processed. Please go back and try again."
+            }),
             404 => View("NotFound", new ErrorViewModel
             {
                 StatusCode = 404,
                 Title = "Page not found",
                 Message = "The page you requested does not exist or may have been moved."
+            }),
+            500 => View("ServerError", new ErrorViewModel
+            {
+                StatusCode = 500,
+                Title = "Server error",
+                Message = "Something went wrong while processing your request."
             }),
             _ => View("ServerError", new ErrorViewModel
             {

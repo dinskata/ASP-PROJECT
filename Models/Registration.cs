@@ -17,4 +17,17 @@ public class Registration
     public int Tickets { get; set; }
 
     public DateTime RegisteredOnUtc { get; set; } = DateTime.UtcNow;
+
+    [StringLength(80)]
+    public string CardholderName { get; set; } = string.Empty;
+
+    [StringLength(4)]
+    public string CardLast4 { get; set; } = string.Empty;
+
+    [StringLength(40)]
+    public string PaymentStatus { get; set; } = "Paid";
+
+    public decimal AmountPaid { get; set; }
+
+    public DateTime? RefundedOnUtc { get; set; }
 }

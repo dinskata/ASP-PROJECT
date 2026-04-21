@@ -13,6 +13,7 @@ public class EventDetailsViewModel
     public int DurationMinutes { get; init; }
     public decimal Price { get; init; }
     public int SeatsAvailable { get; init; }
+    public bool HasEnded { get; init; }
     public double AverageRating { get; init; }
     public int ReviewCount { get; init; }
     public IReadOnlyCollection<ReviewSummaryViewModel> Reviews { get; init; } = Array.Empty<ReviewSummaryViewModel>();

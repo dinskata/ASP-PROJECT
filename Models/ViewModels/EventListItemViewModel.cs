@@ -10,5 +10,7 @@ public class EventListItemViewModel
     public DateTime StartsAtUtc { get; init; }
     public decimal Price { get; init; }
     public int SeatsAvailable { get; init; }
+    public bool HasEnded { get; init; }
     public double AverageRating { get; init; }
+    public int ReviewCount { get; init; }
 }

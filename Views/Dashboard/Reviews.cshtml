@@ -1,0 +1,82 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.ReviewableEventViewModel>
+@{
+    ViewData["Title"] = "My Reviews";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Personal area</span>
+                <h1>Reviews</h1>
+            </div>
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="vstack gap-4">
+                @foreach (var item in Model)
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+                                <div>
+                                    <h2 class="h5 mb-1">@item.EventTitle</h2>
+                                    <p class="mb-0 text-secondary">@item.Venue • @item.StartsAtUtc.ToLocalTime().ToString("f")</p>
+                                </div>
+                                @if (item.HasExistingReview)
+                                {
+                                    <span class="badge bg-success-subtle text-success-emphasis">Reviewed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-dark">Ready for review</span>
+                                }
+                            </div>
+
+                            @if (item.HasExistingReview)
+                            {
+                                <div class="review-item">
+                                    <div class="small text-warning">Rating: @item.ExistingRating / 5</div>
+                                    <p class="mb-0">@item.ExistingComment</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <form asp-action="SubmitReview" method="post" class="vstack gap-3">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="EventId" value="@item.EventId" />
+                                    <div>
+                                        <label class="form-label" for="rating-@item.EventId">Rating</label>
+                                        <select id="rating-@item.EventId" name="Rating" class="form-select">
+                                            <option value="5">5</option>
+                                            <option value="4">4</option>
+                                            <option value="3">3</option>
+                                            <option value="2">2</option>
+                                            <option value="1">1</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="comment-@item.EventId">Comment</label>
+                                        <textarea id="comment-@item.EventId" name="Comment" class="form-control" rows="4"></textarea>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-outline-primary">Submit review</button>
+                                    </div>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="mb-0 text-secondary">You do not have any ended purchased events ready for review yet.</p>
+                </div>
+            </div>
+        }
+    </div>
+</section>

@@ -39,6 +39,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasColumnType("decimal(10,2)");
 
         builder.Entity<Registration>()
+            .Property(x => x.AmountPaid)
+            .HasColumnType("decimal(10,2)");
+
+        builder.Entity<Registration>()
             .HasOne(x => x.User)
             .WithMany(x => x.Registrations)
             .HasForeignKey(x => x.UserId)

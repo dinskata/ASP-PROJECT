@@ -15,15 +15,19 @@ public class EventService : IEventService
         _dbContext = dbContext;
     }
 
-    public async Task<EventListViewModel> GetPublishedEventsAsync(string? searchTerm, int? categoryId, int pageNumber, int pageSize)
+    public async Task<EventListViewModel> GetPublishedEventsAsync(string? searchTerm, int? categoryId, string? statusFilter, int pageNumber, int pageSize)
     {
+        var normalizedStatusFilter = string.IsNullOrWhiteSpace(statusFilter)
+            ? "all"
+            : statusFilter.Trim().ToLowerInvariant();
+        var now = DateTime.UtcNow;
+
         var query = _dbContext.Events
             .AsNoTracking()
             .Where(x => x.IsPublished)
             .Include(x => x.Category)
             .Include(x => x.Venue)
             .Include(x => x.Reviews)
-            .OrderBy(x => x.StartsAtUtc)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -40,6 +44,19 @@ public class EventService : IEventService
             query = query.Where(x => x.CategoryId == categoryId.Value);
         }
 
+        if (normalizedStatusFilter == "upcoming")
+        {
+            query = query.Where(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) > now);
+        }
+        else if (normalizedStatusFilter == "ended")
+        {
+            query = query.Where(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now);
+        }
+
+        query = query
+            .OrderBy(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now)
+            .ThenBy(x => x.StartsAtUtc);
+
         var totalItems = await query.CountAsync();
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
@@ -54,7 +71,9 @@ public class EventService : IEventService
                 StartsAtUtc = x.StartsAtUtc,
                 Price = x.Price,
                 SeatsAvailable = x.SeatsAvailable,
-                AverageRating = x.Reviews.Count == 0 ? 0 : x.Reviews.Average(r => r.Rating)
+                HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now,
+                AverageRating = x.Reviews.Count == 0 ? 0 : x.Reviews.Average(r => r.Rating),
+                ReviewCount = x.Reviews.Count
             })
             .ToListAsync();
 
@@ -62,6 +81,7 @@ public class EventService : IEventService
         {
             SearchTerm = searchTerm ?? string.Empty,
             CategoryId = categoryId,
+            StatusFilter = normalizedStatusFilter,
             Categories = await GetCategoriesAsync(),
             Result = new PagedResult<EventListItemViewModel>
             {
@@ -95,6 +115,7 @@ public class EventService : IEventService
                 DurationMinutes = x.DurationMinutes,
                 Price = x.Price,
                 SeatsAvailable = x.SeatsAvailable,
+                HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= DateTime.UtcNow,
                 AverageRating = x.Reviews.Count == 0 ? 0 : x.Reviews.Average(r => r.Rating),
                 ReviewCount = x.Reviews.Count,
                 Reviews = x.Reviews
@@ -199,7 +220,12 @@ public class EventService : IEventService
     public async Task<bool> RegisterAsync(string userId, RegistrationInputModel model)
     {
         var eventEntity = await _dbContext.Events.SingleOrDefaultAsync(x => x.Id == model.EventId && x.IsPublished);
-        if (eventEntity is null || model.Tickets > eventEntity.SeatsAvailable)
+        if (eventEntity is null || model.Tickets > eventEntity.SeatsAvailable || eventEntity.StartsAtUtc <= DateTime.UtcNow)
+        {
+            return false;
+        }
+
+        if (!string.Equals(model.PaymentDecision, "accepted", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
@@ -214,7 +240,11 @@ public class EventService : IEventService
         {
             EventId = model.EventId,
             UserId = userId,
-            Tickets = model.Tickets
+            Tickets = model.Tickets,
+            CardholderName = model.CardholderName.Trim(),
+            CardLast4 = model.CardNumber[^4..],
+            PaymentStatus = "Paid",
+            AmountPaid = model.Tickets * eventEntity.Price
         });
 
         eventEntity.SeatsAvailable -= model.Tickets;
@@ -222,8 +252,44 @@ public class EventService : IEventService
         return true;
     }
 
+    public async Task<bool> RequestRefundAsync(string userId, int registrationId)
+    {
+        var registration = await _dbContext.Registrations
+            .Include(x => x.Event)
+            .SingleOrDefaultAsync(x => x.Id == registrationId && x.UserId == userId);
+        if (registration is null || registration.Event is null)
+        {
+            return false;
+        }
+
+        if (registration.PaymentStatus == "Refunded")
+        {
+            return false;
+        }
+
+        if (registration.Event.StartsAtUtc <= DateTime.UtcNow.AddHours(48))
+        {
+            return false;
+        }
+
+        registration.PaymentStatus = "Refunded";
+        registration.RefundedOnUtc = DateTime.UtcNow;
+        registration.Event.SeatsAvailable += registration.Tickets;
+
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> AddReviewAsync(string userId, ReviewInputModel model)
     {
+        var eventEntity = await _dbContext.Events
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == model.EventId && x.IsPublished);
+        if (eventEntity is null || eventEntity.StartsAtUtc.AddMinutes(eventEntity.DurationMinutes) > DateTime.UtcNow)
+        {
+            return false;
+        }
+
         var registrationExists = await _dbContext.Registrations.AnyAsync(x => x.EventId == model.EventId && x.UserId == userId);
         if (!registrationExists)
         {
@@ -263,7 +329,35 @@ public class EventService : IEventService
                 EventTitle = x.Event!.Title,
                 StartsAtUtc = x.Event.StartsAtUtc,
                 Tickets = x.Tickets,
-                Venue = x.Event.Venue!.Name
+                Venue = x.Event.Venue!.Name,
+                AmountPaid = x.AmountPaid,
+                PaymentStatus = x.PaymentStatus,
+                CardLast4 = x.CardLast4,
+                CanRequestRefund = x.PaymentStatus == "Paid" && x.Event.StartsAtUtc > DateTime.UtcNow.AddHours(48)
+            })
+            .ToListAsync();
+    }
+
+    public async Task<IReadOnlyCollection<ReviewableEventViewModel>> GetReviewableEventsAsync(string userId)
+    {
+        return await _dbContext.Registrations
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && x.Event != null && x.Event.IsPublished)
+            .Include(x => x.Event)
+                .ThenInclude(x => x!.Venue)
+            .Include(x => x.Event)
+                .ThenInclude(x => x!.Reviews)
+            .Where(x => x.Event!.StartsAtUtc.AddMinutes(x.Event.DurationMinutes) <= DateTime.UtcNow)
+            .OrderByDescending(x => x.Event!.StartsAtUtc)
+            .Select(x => new ReviewableEventViewModel
+            {
+                EventId = x.EventId,
+                EventTitle = x.Event!.Title,
+                Venue = x.Event.Venue!.Name,
+                StartsAtUtc = x.Event.StartsAtUtc,
+                HasExistingReview = x.Event.Reviews.Any(r => r.UserId == userId),
+                ExistingComment = x.Event.Reviews.Where(r => r.UserId == userId).Select(r => r.Comment).FirstOrDefault() ?? string.Empty,
+                ExistingRating = x.Event.Reviews.Where(r => r.UserId == userId).Select(r => r.Rating).FirstOrDefault()
             })
             .ToListAsync();
     }
@@ -288,12 +382,15 @@ public class EventService : IEventService
                     Title = x.Title,
                     Category = x.Category!.Name,
                     Venue = x.Venue!.Name,
-                    City = x.Venue.City,
-                    StartsAtUtc = x.StartsAtUtc,
-                    Price = x.Price,
-                    SeatsAvailable = x.SeatsAvailable
-                })
-                .ToListAsync()
+                City = x.Venue.City,
+                StartsAtUtc = x.StartsAtUtc,
+                Price = x.Price,
+                SeatsAvailable = x.SeatsAvailable,
+                HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= DateTime.UtcNow,
+                AverageRating = 0,
+                ReviewCount = 0
+            })
+            .ToListAsync()
         };
     }
 }

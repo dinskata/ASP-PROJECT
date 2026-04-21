@@ -88,7 +88,7 @@ public class RegisterModel : PageModel
         if (result.Succeeded)
         {
             _logger.LogInformation("User created a new account with password.");
-            await _userManager.AddToRoleAsync(user, "User");
+            await _userManager.AddToRoleAsync(user, ASP_PROJECT.Data.DbInitializer.BuyerRole);
 
             var userId = await _userManager.GetUserIdAsync(user);
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

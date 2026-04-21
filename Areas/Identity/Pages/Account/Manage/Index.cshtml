@@ -1,0 +1,91 @@
+@page "/Identity/Account/Manage"
+@model ASP_PROJECT.Areas.Identity.Pages.Account.Manage.IndexModel
+@{
+    ViewData["Title"] = "My account";
+}
+
+<section class="section-space">
+    <div class="container account-settings-shell">
+        <div class="account-settings-grid">
+            <aside class="account-settings-intro">
+                <span class="section-label">Account</span>
+                <h1>Account settings</h1>
+                <p>Manage the details connected to your profile, registrations, and reviews from one place.</p>
+
+                <div class="auth-points mt-4">
+                    <div class="auth-point">
+                        <strong>Profile details</strong>
+                        <span>Keep your name and email current so your account information stays consistent across the site.</span>
+                    </div>
+                    <div class="auth-point">
+                        <strong>Password updates</strong>
+                        <span>Change your password right here whenever you want to improve your account security.</span>
+                    </div>
+                    <div class="auth-point">
+                        <strong>Quick access</strong>
+                        <span>Return to your dashboard any time to review registrations and upcoming event plans.</span>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="account-settings-panels">
+                <form method="post" class="account-settings-card vstack gap-3">
+                    <div class="auth-card-header mb-0">
+                        <span class="tiny-label">Profile</span>
+                        <h2 class="h4 mb-2">Personal information</h2>
+                        <p class="mb-0">Update the main details associated with your account.</p>
+                    </div>
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                    <div>
+                        <label asp-for="Input.FullName" class="form-label"></label>
+                        <input asp-for="Input.FullName" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="email" readonly />
+                        <div class="form-text">Email is fixed for this account and cannot be changed here. If you want to change your email, please contact us.</div>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <hr class="account-settings-divider" />
+
+                    <div class="auth-card-header mb-0">
+                        <span class="tiny-label">Security</span>
+                        <h2 class="h4 mb-2">Change password</h2>
+                        <p class="mb-0">Leave these fields empty if you only want to save profile changes.</p>
+                    </div>
+
+                    <div>
+                        <label asp-for="Input.OldPassword" class="form-label"></label>
+                        <input asp-for="Input.OldPassword" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Input.OldPassword" class="text-danger"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Input.NewPassword" class="form-label"></label>
+                        <input asp-for="Input.NewPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 pt-2">
+                        <button type="submit" class="btn btn-primary">Save account settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -8,4 +8,8 @@ public class RegistrationSummaryViewModel
     public DateTime StartsAtUtc { get; init; }
     public int Tickets { get; init; }
     public string Venue { get; init; } = string.Empty;
+    public decimal AmountPaid { get; init; }
+    public string PaymentStatus { get; init; } = string.Empty;
+    public string CardLast4 { get; init; } = string.Empty;
+    public bool CanRequestRefund { get; init; }
 }

@@ -14,7 +14,7 @@
     <header class="site-header">
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container">
-                <a class="navbar-brand brand-lockup" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand brand-lockup" asp-area="" asp-controller="Home" asp-action="Index">
                     <span class="brand-mark">E</span>
                     <span class="fw-semibold">Eventure</span>
                 </a>
@@ -23,15 +23,11 @@
                 </button>
                 <div id="mainNav" class="collapse navbar-collapse">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Events" asp-action="Index">Events</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Venues" asp-action="Index">Venues</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Announcements" asp-action="Index">Announcements</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="About">About</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Contact</a></li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">My Dashboard</a></li>
-                        }
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index">Events</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Venues" asp-action="Index">Venues</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Announcements" asp-action="Index">Announcements</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
                         @if (User.IsInRole(DbInitializer.AdministratorRole))
                         {
                             <li class="nav-item"><a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a></li>

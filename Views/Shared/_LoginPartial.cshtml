@@ -6,13 +6,31 @@
 <ul class="navbar-nav auth-nav align-items-lg-center gap-lg-2">
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a class="nav-link nav-pill" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button type="submit" class="btn btn-sm btn-outline-light nav-action">Logout</button>
-        </form>
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayName = currentUser?.Email ?? User.Identity?.Name ?? "Account";
+    <li class="nav-item dropdown">
+        <a class="nav-link nav-pill dropdown-toggle user-menu-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @displayName
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end user-menu">
+            <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="Index">My dashboard</a></li>
+            <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="Reviews">Reviews</a></li>
+            <li><a class="dropdown-item" href="/Identity/Account/Manage">Account settings</a></li>
+            @if (User.IsInRole(ASP_PROJECT.Data.DbInitializer.AdministratorRole) || User.IsInRole(ASP_PROJECT.Data.DbInitializer.VenueManagerRole))
+            {
+                <li><a class="dropdown-item" asp-area="Admin" asp-controller="Venues" asp-action="Index">Manage venues</a></li>
+            }
+            @if (User.IsInRole(ASP_PROJECT.Data.DbInitializer.AdministratorRole))
+            {
+                <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin panel</a></li>
+            }
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit" class="dropdown-item">Logout</button>
+                </form>
+            </li>
+        </ul>
     </li>
 }
 else

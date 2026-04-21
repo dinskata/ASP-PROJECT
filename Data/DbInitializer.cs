@@ -7,9 +7,12 @@ namespace ASP_PROJECT.Data;
 public static class DbInitializer
 {
     public const string AdministratorRole = "Administrator";
-    public const string UserRole = "User";
+    public const string BuyerRole = "Buyer";
+    public const string VenueManagerRole = "Venue Manager";
     public const string AdminEmail = "admin@eventure.local";
     public const string AdminPassword = "Admin123!";
+    public const string DemoBuyerEmail = "buyer@eventure.local";
+    public const string DemoBuyerPassword = "Buyer123!";
 
     public static async Task SeedAsync(IServiceProvider services)
     {
@@ -19,9 +22,14 @@ public static class DbInitializer
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
+        if (await dbContext.Database.CanConnectAsync() && !await RegistrationPurchaseColumnsExistAsync(dbContext))
+        {
+            await dbContext.Database.EnsureDeletedAsync();
+        }
+
         await dbContext.Database.EnsureCreatedAsync();
 
-        foreach (var roleName in new[] { AdministratorRole, UserRole })
+        foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole })
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
@@ -176,6 +184,42 @@ public static class DbInitializer
                 Price = 0,
                 SeatsAvailable = 170,
                 IsPublished = true
+            },
+            new Event
+            {
+                Title = "Digital Product Leadership Roundtable",
+                Description = "A focused discussion event for team leads and product decision-makers covering roadmap planning, cross-functional communication, delivery tradeoffs, and healthier collaboration between product, design, and engineering.",
+                CategoryId = business.Id,
+                VenueId = skyline.Id,
+                StartsAtUtc = DateTime.UtcNow.AddDays(44).Date.AddHours(13),
+                DurationMinutes = 180,
+                Price = 22,
+                SeatsAvailable = 105,
+                IsPublished = true
+            },
+            new Event
+            {
+                Title = "Frontend Systems Retrospective",
+                Description = "A past discussion session exploring component libraries, design system decisions, and how teams can simplify front-end collaboration after shipping complex products.",
+                CategoryId = technology.Id,
+                VenueId = skyline.Id,
+                StartsAtUtc = DateTime.UtcNow.AddDays(-20).Date.AddHours(9),
+                DurationMinutes = 180,
+                Price = 18,
+                SeatsAvailable = 140,
+                IsPublished = true
+            },
+            new Event
+            {
+                Title = "Community Organizers Workshop",
+                Description = "A completed workshop for local organizers focused on volunteer coordination, communication planning, and running practical events with clearer attendee expectations.",
+                CategoryId = community.Id,
+                VenueId = northHub.Id,
+                StartsAtUtc = DateTime.UtcNow.AddDays(-12).Date.AddHours(10),
+                DurationMinutes = 150,
+                Price = 0,
+                SeatsAvailable = 90,
+                IsPublished = true
             }
         };
 
@@ -194,6 +238,7 @@ public static class DbInitializer
                 Title = "Registration is open for the spring event season",
                 Content = "Browse the latest events, compare venues, and reserve your seat early because the most popular workshops are filling up quickly.",
                 Audience = "All",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-18),
                 IsPinned = true
             },
             new Announcement
@@ -201,6 +246,7 @@ public static class DbInitializer
                 Title = "Student discounts available for selected workshops",
                 Content = "Use your academic email when registering and check the event details page to see where discounted tickets are enabled.",
                 Audience = "Students",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-15),
                 IsPinned = false
             },
             new Announcement
@@ -208,6 +254,7 @@ public static class DbInitializer
                 Title = "New cities and venues have been added",
                 Content = "Eventure now highlights additional venues and fresh event options so visitors can compare more locations, formats, and learning opportunities.",
                 Audience = "All",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-12),
                 IsPinned = false
             },
             new Announcement
@@ -215,6 +262,7 @@ public static class DbInitializer
                 Title = "Speaker and partner requests are now open",
                 Content = "Teams interested in speaking, sponsoring, or supporting community sessions can use the contact page to start a collaboration conversation.",
                 Audience = "Partners",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-10),
                 IsPinned = true
             },
             new Announcement
@@ -222,6 +270,7 @@ public static class DbInitializer
                 Title = "Weekend community events have been refreshed",
                 Content = "Several community and networking sessions were added to help visitors find more flexible weekend options across different cities.",
                 Audience = "All",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-7),
                 IsPinned = false
             },
             new Announcement
@@ -229,6 +278,7 @@ public static class DbInitializer
                 Title = "Venue details now include more planning information",
                 Content = "Updated venue pages highlight city, address, capacity, and short descriptions to make comparing spaces easier before registration.",
                 Audience = "All",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-5),
                 IsPinned = false
             },
             new Announcement
@@ -236,6 +286,7 @@ public static class DbInitializer
                 Title = "Career-focused sessions added for new attendees",
                 Content = "If you are preparing for a role change or building professional confidence, the new career events offer practical guidance and smaller group formats.",
                 Audience = "Professionals",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-3),
                 IsPinned = false
             },
             new Announcement
@@ -243,6 +294,7 @@ public static class DbInitializer
                 Title = "More workshop seats opened for selected sessions",
                 Content = "Additional availability was released for some popular workshops, so visitors who missed earlier spots should check the event pages again.",
                 Audience = "Attendees",
+                PublishedOnUtc = DateTime.UtcNow.AddDays(-1),
                 IsPinned = false
             }
         };
@@ -280,9 +332,103 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(adminUser, AdministratorRole);
         }
 
-        if (!await userManager.IsInRoleAsync(adminUser, UserRole))
+        if (!await userManager.IsInRoleAsync(adminUser, BuyerRole))
         {
-            await userManager.AddToRoleAsync(adminUser, UserRole);
+            await userManager.AddToRoleAsync(adminUser, BuyerRole);
         }
+
+        var demoBuyer = await userManager.FindByEmailAsync(DemoBuyerEmail);
+        if (demoBuyer is null)
+        {
+            demoBuyer = new ApplicationUser
+            {
+                UserName = DemoBuyerEmail,
+                Email = DemoBuyerEmail,
+                EmailConfirmed = true,
+                FullName = "Demo Buyer"
+            };
+
+            var buyerResult = await userManager.CreateAsync(demoBuyer, DemoBuyerPassword);
+            if (!buyerResult.Succeeded)
+            {
+                throw new InvalidOperationException("Failed to create seeded buyer user.");
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(demoBuyer, BuyerRole))
+        {
+            await userManager.AddToRoleAsync(demoBuyer, BuyerRole);
+        }
+
+        var pastFrontendEvent = await dbContext.Events.SingleAsync(x => x.Title == "Frontend Systems Retrospective");
+        var pastCommunityEvent = await dbContext.Events.SingleAsync(x => x.Title == "Community Organizers Workshop");
+
+        if (!await dbContext.Registrations.AnyAsync(x => x.EventId == pastFrontendEvent.Id && x.UserId == demoBuyer.Id))
+        {
+            dbContext.Registrations.Add(new Registration
+            {
+                EventId = pastFrontendEvent.Id,
+                UserId = demoBuyer.Id,
+                Tickets = 1,
+                RegisteredOnUtc = pastFrontendEvent.StartsAtUtc.AddDays(-10)
+            });
+        }
+
+        if (!await dbContext.Registrations.AnyAsync(x => x.EventId == pastCommunityEvent.Id && x.UserId == adminUser.Id))
+        {
+            dbContext.Registrations.Add(new Registration
+            {
+                EventId = pastCommunityEvent.Id,
+                UserId = adminUser.Id,
+                Tickets = 2,
+                RegisteredOnUtc = pastCommunityEvent.StartsAtUtc.AddDays(-8)
+            });
+        }
+
+        if (!await dbContext.Reviews.AnyAsync(x => x.EventId == pastFrontendEvent.Id && x.UserId == demoBuyer.Id))
+        {
+            dbContext.Reviews.Add(new Review
+            {
+                EventId = pastFrontendEvent.Id,
+                UserId = demoBuyer.Id,
+                Rating = 5,
+                Comment = "Great discussions, useful examples, and a much stronger sense of how design systems can stay maintainable across teams.",
+                CreatedOnUtc = pastFrontendEvent.StartsAtUtc.AddDays(1)
+            });
+        }
+
+        if (!await dbContext.Reviews.AnyAsync(x => x.EventId == pastCommunityEvent.Id && x.UserId == adminUser.Id))
+        {
+            dbContext.Reviews.Add(new Review
+            {
+                EventId = pastCommunityEvent.Id,
+                UserId = adminUser.Id,
+                Rating = 4,
+                Comment = "Well organized and practical, especially for smaller teams planning community events with limited time and resources.",
+                CreatedOnUtc = pastCommunityEvent.StartsAtUtc.AddDays(1)
+            });
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task<bool> RegistrationPurchaseColumnsExistAsync(ApplicationDbContext dbContext)
+    {
+        await using var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync();
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = 'Registrations'
+              AND COLUMN_NAME IN ('AmountPaid', 'CardLast4', 'CardholderName', 'PaymentStatus', 'RefundedOnUtc')
+            """;
+
+        var result = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(result) == 5;
     }
 }

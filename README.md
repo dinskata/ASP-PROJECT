@@ -1,3 +1,9 @@
+Test User: test@test.com Test1234
+Test Venue Manager:
+SiteModerator: 
+Admin: admin@eventure.local Admin123!
+
+
 # Eventure
 
 Eventure is an ASP.NET Core MVC web application for browsing, managing, and attending professional and community events. The project was prepared as an advanced individual course assignment and demonstrates a layered architecture, ASP.NET Identity, Entity Framework Core with SQL Server, MVC Areas, Razor views, validation, search, pagination, seeding, and unit testing.

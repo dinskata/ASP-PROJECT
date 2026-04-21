@@ -1,3 +1,4 @@
+@using System.Globalization
 @model ASP_PROJECT.Models.Announcement
 @{
     ViewData["Title"] = Model.Title;
@@ -7,7 +8,7 @@
     <div class="container narrow-content">
         <span class="section-label">@Model.Audience</span>
         <h1>@Model.Title</h1>
-        <p class="text-secondary">@Model.PublishedOnUtc.ToLocalTime().ToString("f")</p>
+        <p class="text-secondary">@Model.PublishedOnUtc.ToLocalTime().ToString("dddd, dd MMMM yyyy HH:mm", CultureInfo.InvariantCulture)</p>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <p class="mb-0">@Model.Content</p>
