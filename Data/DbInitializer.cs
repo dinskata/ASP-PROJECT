@@ -6,13 +6,23 @@ namespace ASP_PROJECT.Data;
 
 public static class DbInitializer
 {
+    private const string DefaultLocalDbConnection = "Server=(localdb)\\mssqllocaldb;Database=aspnet-ASP_PROJECT-65637b89-fe41-4c16-a765-7c3e79a8fe75;Trusted_Connection=True;MultipleActiveResultSets=true";
     public const string AdministratorRole = "Administrator";
     public const string BuyerRole = "Buyer";
     public const string VenueManagerRole = "Venue Manager";
+    public const string SiteModeratorRole = "Site Moderator";
+    public const string TestUserEmail = "test@test.com";
+    public const string TestUserPassword = "Test1234";
+    public const string TestVenueManagerEmail = "venuemanager@eventure.local";
+    public const string TestVenueManagerPassword = "Venue1234";
+    public const string SiteModeratorEmail = "moderator@eventure.local";
+    public const string SiteModeratorPassword = "Moder1234";
     public const string AdminEmail = "admin@eventure.local";
     public const string AdminPassword = "Admin123!";
     public const string DemoBuyerEmail = "buyer@eventure.local";
     public const string DemoBuyerPassword = "Buyer123!";
+    public const string DemoReviewerEmail = "reviewer@eventure.local";
+    public const string DemoReviewerPassword = "Reviewer123!";
 
     public static async Task SeedAsync(IServiceProvider services)
     {
@@ -22,6 +32,11 @@ public static class DbInitializer
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
+        if (string.IsNullOrWhiteSpace(dbContext.Database.GetConnectionString()))
+        {
+            dbContext.Database.SetConnectionString(DefaultLocalDbConnection);
+        }
+
         if (await dbContext.Database.CanConnectAsync() && !await RegistrationPurchaseColumnsExistAsync(dbContext))
         {
             await dbContext.Database.EnsureDeletedAsync();
@@ -29,7 +44,7 @@ public static class DbInitializer
 
         await dbContext.Database.EnsureCreatedAsync();
 
-        foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole })
+        foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole, SiteModeratorRole })
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
@@ -220,6 +235,30 @@ public static class DbInitializer
                 Price = 0,
                 SeatsAvailable = 90,
                 IsPublished = true
+            },
+            new Event
+            {
+                Title = "Design Systems Review Session",
+                Description = "A completed design-focused event covering component consistency, UI documentation, accessibility checks, and more practical collaboration between design and engineering teams.",
+                CategoryId = design.Id,
+                VenueId = studio.Id,
+                StartsAtUtc = DateTime.UtcNow.AddDays(-16).Date.AddHours(11),
+                DurationMinutes = 180,
+                Price = 16,
+                SeatsAvailable = 65,
+                IsPublished = true
+            },
+            new Event
+            {
+                Title = "Local Growth Meetup Recap",
+                Description = "A finished marketing meetup where attendees reviewed campaign experiments, audience growth lessons, and realistic reporting approaches for smaller product teams.",
+                CategoryId = marketing.Id,
+                VenueId = forum.Id,
+                StartsAtUtc = DateTime.UtcNow.AddDays(-8).Date.AddHours(18),
+                DurationMinutes = 120,
+                Price = 10,
+                SeatsAvailable = 110,
+                IsPublished = true
             }
         };
 
@@ -337,6 +376,85 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(adminUser, BuyerRole);
         }
 
+        var testUser = await userManager.FindByEmailAsync(TestUserEmail);
+        if (testUser is null)
+        {
+            testUser = new ApplicationUser
+            {
+                UserName = TestUserEmail,
+                Email = TestUserEmail,
+                EmailConfirmed = true,
+                FullName = "Test User"
+            };
+
+            var testUserResult = await userManager.CreateAsync(testUser, TestUserPassword);
+            if (!testUserResult.Succeeded)
+            {
+                throw new InvalidOperationException("Failed to create seeded test user.");
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(testUser, BuyerRole))
+        {
+            await userManager.AddToRoleAsync(testUser, BuyerRole);
+        }
+
+        var venueManagerUser = await userManager.FindByEmailAsync(TestVenueManagerEmail);
+        if (venueManagerUser is null)
+        {
+            venueManagerUser = new ApplicationUser
+            {
+                UserName = TestVenueManagerEmail,
+                Email = TestVenueManagerEmail,
+                EmailConfirmed = true,
+                FullName = "Test Venue Manager"
+            };
+
+            var venueManagerResult = await userManager.CreateAsync(venueManagerUser, TestVenueManagerPassword);
+            if (!venueManagerResult.Succeeded)
+            {
+                throw new InvalidOperationException("Failed to create seeded venue manager user.");
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(venueManagerUser, VenueManagerRole))
+        {
+            await userManager.AddToRoleAsync(venueManagerUser, VenueManagerRole);
+        }
+
+        if (!await userManager.IsInRoleAsync(venueManagerUser, BuyerRole))
+        {
+            await userManager.AddToRoleAsync(venueManagerUser, BuyerRole);
+        }
+
+        var siteModeratorUser = await userManager.FindByEmailAsync(SiteModeratorEmail);
+        if (siteModeratorUser is null)
+        {
+            siteModeratorUser = new ApplicationUser
+            {
+                UserName = SiteModeratorEmail,
+                Email = SiteModeratorEmail,
+                EmailConfirmed = true,
+                FullName = "Site Moderator"
+            };
+
+            var siteModeratorResult = await userManager.CreateAsync(siteModeratorUser, SiteModeratorPassword);
+            if (!siteModeratorResult.Succeeded)
+            {
+                throw new InvalidOperationException("Failed to create seeded site moderator user.");
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(siteModeratorUser, SiteModeratorRole))
+        {
+            await userManager.AddToRoleAsync(siteModeratorUser, SiteModeratorRole);
+        }
+
+        if (!await userManager.IsInRoleAsync(siteModeratorUser, BuyerRole))
+        {
+            await userManager.AddToRoleAsync(siteModeratorUser, BuyerRole);
+        }
+
         var demoBuyer = await userManager.FindByEmailAsync(DemoBuyerEmail);
         if (demoBuyer is null)
         {
@@ -360,8 +478,33 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(demoBuyer, BuyerRole);
         }
 
+        var demoReviewer = await userManager.FindByEmailAsync(DemoReviewerEmail);
+        if (demoReviewer is null)
+        {
+            demoReviewer = new ApplicationUser
+            {
+                UserName = DemoReviewerEmail,
+                Email = DemoReviewerEmail,
+                EmailConfirmed = true,
+                FullName = "Demo Reviewer"
+            };
+
+            var reviewerResult = await userManager.CreateAsync(demoReviewer, DemoReviewerPassword);
+            if (!reviewerResult.Succeeded)
+            {
+                throw new InvalidOperationException("Failed to create seeded reviewer user.");
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(demoReviewer, BuyerRole))
+        {
+            await userManager.AddToRoleAsync(demoReviewer, BuyerRole);
+        }
+
         var pastFrontendEvent = await dbContext.Events.SingleAsync(x => x.Title == "Frontend Systems Retrospective");
         var pastCommunityEvent = await dbContext.Events.SingleAsync(x => x.Title == "Community Organizers Workshop");
+        var pastDesignEvent = await dbContext.Events.SingleAsync(x => x.Title == "Design Systems Review Session");
+        var pastMarketingEvent = await dbContext.Events.SingleAsync(x => x.Title == "Local Growth Meetup Recap");
 
         if (!await dbContext.Registrations.AnyAsync(x => x.EventId == pastFrontendEvent.Id && x.UserId == demoBuyer.Id))
         {
@@ -382,6 +525,39 @@ public static class DbInitializer
                 UserId = adminUser.Id,
                 Tickets = 2,
                 RegisteredOnUtc = pastCommunityEvent.StartsAtUtc.AddDays(-8)
+            });
+        }
+
+        if (!await dbContext.Registrations.AnyAsync(x => x.EventId == pastDesignEvent.Id && x.UserId == demoReviewer.Id))
+        {
+            dbContext.Registrations.Add(new Registration
+            {
+                EventId = pastDesignEvent.Id,
+                UserId = demoReviewer.Id,
+                Tickets = 1,
+                RegisteredOnUtc = pastDesignEvent.StartsAtUtc.AddDays(-6)
+            });
+        }
+
+        if (!await dbContext.Registrations.AnyAsync(x => x.EventId == pastMarketingEvent.Id && x.UserId == demoBuyer.Id))
+        {
+            dbContext.Registrations.Add(new Registration
+            {
+                EventId = pastMarketingEvent.Id,
+                UserId = demoBuyer.Id,
+                Tickets = 1,
+                RegisteredOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(-5)
+            });
+        }
+
+        if (!await dbContext.Registrations.AnyAsync(x => x.EventId == pastMarketingEvent.Id && x.UserId == demoReviewer.Id))
+        {
+            dbContext.Registrations.Add(new Registration
+            {
+                EventId = pastMarketingEvent.Id,
+                UserId = demoReviewer.Id,
+                Tickets = 1,
+                RegisteredOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(-4)
             });
         }
 
@@ -406,6 +582,42 @@ public static class DbInitializer
                 Rating = 4,
                 Comment = "Well organized and practical, especially for smaller teams planning community events with limited time and resources.",
                 CreatedOnUtc = pastCommunityEvent.StartsAtUtc.AddDays(1)
+            });
+        }
+
+        if (!await dbContext.Reviews.AnyAsync(x => x.EventId == pastDesignEvent.Id && x.UserId == demoReviewer.Id))
+        {
+            dbContext.Reviews.Add(new Review
+            {
+                EventId = pastDesignEvent.Id,
+                UserId = demoReviewer.Id,
+                Rating = 5,
+                Comment = "Clear examples, thoughtful feedback, and a very practical discussion about keeping design systems usable across real product work.",
+                CreatedOnUtc = pastDesignEvent.StartsAtUtc.AddDays(1)
+            });
+        }
+
+        if (!await dbContext.Reviews.AnyAsync(x => x.EventId == pastMarketingEvent.Id && x.UserId == demoBuyer.Id))
+        {
+            dbContext.Reviews.Add(new Review
+            {
+                EventId = pastMarketingEvent.Id,
+                UserId = demoBuyer.Id,
+                Rating = 4,
+                Comment = "Useful session with realistic campaign advice and good examples for smaller teams that need simple reporting.",
+                CreatedOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(1)
+            });
+        }
+
+        if (!await dbContext.Reviews.AnyAsync(x => x.EventId == pastMarketingEvent.Id && x.UserId == demoReviewer.Id))
+        {
+            dbContext.Reviews.Add(new Review
+            {
+                EventId = pastMarketingEvent.Id,
+                UserId = demoReviewer.Id,
+                Rating = 5,
+                Comment = "Strong speaker lineup and a practical pace throughout. The conversion and messaging sections were especially helpful.",
+                CreatedOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(2)
             });
         }
 
