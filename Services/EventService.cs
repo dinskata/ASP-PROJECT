@@ -312,28 +312,49 @@ public class EventService : IEventService
             return false;
         }
 
-        var alreadyRegistered = await _dbContext.Registrations.AnyAsync(x => x.EventId == model.EventId && x.UserId == userId);
-        if (alreadyRegistered)
+        var existingRegistration = await _dbContext.Registrations
+            .SingleOrDefaultAsync(x => x.EventId == model.EventId && x.UserId == userId);
+
+        if (existingRegistration is not null && existingRegistration.PaymentStatus != "Refunded")
         {
             return false;
         }
 
-        _dbContext.Registrations.Add(new Registration
+        if (existingRegistration is null)
         {
-            EventId = model.EventId,
-            UserId = userId,
-            Tickets = model.Tickets,
-            CardholderName = model.CardholderName.Trim(),
-            CardLast4 = model.CardNumber[^4..],
-            PaymentStatus = "Paid",
-            AmountPaid = model.Tickets * eventEntity.Price
-        });
+            _dbContext.Registrations.Add(new Registration
+            {
+                EventId = model.EventId,
+                UserId = userId,
+                Tickets = model.Tickets,
+                CardholderName = model.CardholderName.Trim(),
+                CardLast4 = model.CardNumber[^4..],
+                PaymentStatus = "Paid",
+                AmountPaid = model.Tickets * eventEntity.Price
+            });
+        }
+        else
+        {
+            existingRegistration.Tickets = model.Tickets;
+            existingRegistration.CardholderName = model.CardholderName.Trim();
+            existingRegistration.CardLast4 = model.CardNumber[^4..];
+            existingRegistration.PaymentStatus = "Paid";
+            existingRegistration.AmountPaid = model.Tickets * eventEntity.Price;
+            existingRegistration.RegisteredOnUtc = DateTime.UtcNow;
+            existingRegistration.RefundedOnUtc = null;
+        }
 
         eventEntity.SeatsAvailable -= model.Tickets;
         await _dbContext.SaveChangesAsync();
 
         var actorName = await GetUserDisplayNameAsync(userId);
-        await LogAuditAsync("Payment", "Purchase", userId, actorName, $"Purchased {model.Tickets} ticket(s) for {eventEntity.Title}.", eventEntity.Id);
+        await LogAuditAsync(
+            "Payment",
+            existingRegistration is null ? "Purchase" : "Repurchase",
+            userId,
+            actorName,
+            $"{(existingRegistration is null ? "Purchased" : "Repurchased")} {model.Tickets} ticket(s) for {eventEntity.Title}.",
+            eventEntity.Id);
         return true;
     }
 
@@ -377,7 +398,10 @@ public class EventService : IEventService
             return false;
         }
 
-        var registrationExists = await _dbContext.Registrations.AnyAsync(x => x.EventId == model.EventId && x.UserId == userId);
+        var registrationExists = await _dbContext.Registrations.AnyAsync(x =>
+            x.EventId == model.EventId &&
+            x.UserId == userId &&
+            x.PaymentStatus == "Paid");
         if (!registrationExists)
         {
             return false;
@@ -433,6 +457,7 @@ public class EventService : IEventService
         return await _dbContext.Registrations
             .AsNoTracking()
             .Where(x => x.UserId == userId && x.Event != null && x.Event.IsPublished)
+            .Where(x => x.PaymentStatus == "Paid")
             .Include(x => x.Event)
                 .ThenInclude(x => x!.Venue)
             .Include(x => x.Event)

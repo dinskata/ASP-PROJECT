@@ -60,7 +60,7 @@
                                     <input type="hidden" name="EventId" value="@item.EventId" />
                                     <div>
                                         <label class="form-label" for="rating-@item.EventId">Rating</label>
-                                        <select id="rating-@item.EventId" name="Rating" class="form-select">
+                                        <select id="rating-@item.EventId" name="Rating" class="form-select" required>
                                             <option value="5">5</option>
                                             <option value="4">4</option>
                                             <option value="3">3</option>
@@ -70,7 +70,7 @@
                                     </div>
                                     <div>
                                         <label class="form-label" for="comment-@item.EventId">Comment</label>
-                                        <textarea id="comment-@item.EventId" name="Comment" class="form-control" rows="4"></textarea>
+                                        <textarea id="comment-@item.EventId" name="Comment" class="form-control" rows="4" minlength="10" maxlength="500" required></textarea>
                                     </div>
                                     <div>
                                         <button class="btn btn-outline-primary">Submit review</button>

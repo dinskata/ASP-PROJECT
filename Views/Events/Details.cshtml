@@ -12,6 +12,13 @@
                 <p class="lead text-secondary">@Model.Description</p>
                 <div class="detail-grid my-4">
                     <div><strong>Date</strong><span>@Model.StartsAtUtc.ToLocalTime().ToString("f")</span></div>
+                    <div>
+                        <strong>Starts in</strong>
+                        <span class="event-start-countdown" data-starts-at="@Model.StartsAtUtc.ToString("O")" data-has-ended="@Model.HasEnded.ToString().ToLowerInvariant()">
+                            @(Model.HasEnded ? "Event ended" : "Calculating...")
+                        </span>
+                        <small class="text-secondary d-block mt-1">Live countdown until the event begins.</small>
+                    </div>
                     <div><strong>Venue</strong><span>@Model.Venue</span></div>
                     <div><strong>Address</strong><span>@Model.VenueAddress, @Model.City</span></div>
                     <div><strong>Duration</strong><span>@Model.DurationMinutes min</span></div>
@@ -53,7 +60,7 @@
                             <div class="vstack gap-3">
                                 <div>
                                     <label class="form-label" for="tickets">Tickets</label>
-                                    <input class="form-control" type="number" min="1" max="10" id="tickets" name="Tickets" value="1" form="purchaseForm" />
+                                    <input class="form-control" type="number" min="1" max="10" step="1" required id="tickets" name="Tickets" value="1" form="purchaseForm" />
                                 </div>
                                 @if (Model.Price > 0)
                                 {
@@ -87,34 +94,35 @@
                                                 <input type="hidden" name="EventId" value="@Model.Id" />
                                                 <input type="hidden" name="Tickets" value="1" id="modalTicketsMirror" />
                                                 <input type="hidden" name="PaymentDecision" id="paymentDecision" value="" />
+                                                <div class="text-danger small d-none" id="purchaseValidationMessage">Please complete the checkout form correctly before continuing.</div>
                                                 <div>
                                                     <label class="form-label" for="cardholderName">Cardholder name</label>
-                                                    <input class="form-control" type="text" id="cardholderName" name="CardholderName" value="Demo Buyer" autocomplete="cc-name" />
+                                                    <input class="form-control" type="text" id="cardholderName" name="CardholderName" value="Alex Petrova" autocomplete="cc-name" minlength="3" maxlength="80" required />
                                                 </div>
                                                 <div>
                                                     <label class="form-label" for="cardNumber">Card number</label>
-                                                    <input class="form-control" type="text" inputmode="numeric" id="cardNumber" name="CardNumber" value="4242424242424242" maxlength="16" autocomplete="cc-number" />
+                                                    <input class="form-control" type="text" inputmode="numeric" id="cardNumber" name="CardNumber" value="4242424242424242" maxlength="16" pattern="\d{16}" autocomplete="cc-number" required />
                                                 </div>
                                                 <div class="row g-3">
                                                     <div class="col-4">
                                                         <label class="form-label" for="expiryMonth">Month</label>
-                                                        <input class="form-control" type="number" min="1" max="12" id="expiryMonth" name="ExpiryMonth" value="12" />
+                                                        <input class="form-control" type="number" min="1" max="12" id="expiryMonth" name="ExpiryMonth" value="12" required />
                                                     </div>
                                                     <div class="col-4">
                                                         <label class="form-label" for="expiryYear">Year</label>
-                                                        <input class="form-control" type="number" min="2026" max="2100" id="expiryYear" name="ExpiryYear" value="2030" />
+                                                        <input class="form-control" type="number" min="2026" max="2100" id="expiryYear" name="ExpiryYear" value="2030" required />
                                                     </div>
                                                     <div class="col-4">
                                                         <label class="form-label" for="cvv">CVV</label>
-                                                        <input class="form-control" type="password" inputmode="numeric" id="cvv" name="Cvv" value="123" maxlength="4" autocomplete="cc-csc" />
+                                                        <input class="form-control" type="password" inputmode="numeric" id="cvv" name="Cvv" value="123" maxlength="4" pattern="\d{3,4}" autocomplete="cc-csc" required />
                                                     </div>
                                                 </div>
                                             </form>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" form="purchaseForm" class="btn btn-outline-danger" onclick="document.getElementById('paymentDecision').value='denied';">Payment denied test</button>
-                                            <button type="submit" form="purchaseForm" class="btn btn-primary" onclick="document.getElementById('paymentDecision').value='accepted';">Payment accepted test</button>
+                                            <button type="button" class="btn btn-outline-danger" data-payment-decision="denied">Payment denied test</button>
+                                            <button type="button" class="btn btn-primary" data-payment-decision="accepted">Payment accepted test</button>
                                         </div>
                                     </div>
                                 </div>
@@ -138,9 +146,59 @@
 @section Scripts {
     <script>
         (function () {
+            const formatCountdown = (target, hasEnded) => {
+                const difference = target.getTime() - Date.now();
+
+                if (difference <= 0) {
+                    return hasEnded ? 'Event ended' : 'Started';
+                }
+
+                const totalSeconds = Math.floor(difference / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                if (days > 0) {
+                    return `in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                }
+
+                if (hours > 0) {
+                    return `in ${hours}h ${minutes}m ${seconds}s`;
+                }
+
+                if (minutes > 0) {
+                    return `in ${minutes}m ${seconds}s`;
+                }
+
+                return `in ${seconds}s`;
+            };
+
+            const countdownElements = document.querySelectorAll('.event-start-countdown');
+            const refreshCountdowns = () => {
+                countdownElements.forEach((element) => {
+                    const value = element.getAttribute('data-starts-at');
+                    if (!value) {
+                        return;
+                    }
+
+                    const hasEnded = element.getAttribute('data-has-ended') === 'true';
+                    element.textContent = formatCountdown(new Date(value), hasEnded);
+                });
+            };
+
             const ticketsInput = document.getElementById('tickets');
             const ticketsMirror = document.getElementById('modalTicketsMirror');
-            if (!ticketsInput || !ticketsMirror) {
+            const purchaseForm = document.getElementById('purchaseForm');
+            const validationMessage = document.getElementById('purchaseValidationMessage');
+            const decisionButtons = document.querySelectorAll('[data-payment-decision]');
+
+            refreshCountdowns();
+            if (countdownElements.length > 0) {
+                window.setInterval(refreshCountdowns, 1000);
+            }
+
+            if (!ticketsInput || !ticketsMirror || !purchaseForm) {
                 return;
             }
 
@@ -150,6 +208,21 @@
 
             syncTickets();
             ticketsInput.addEventListener('input', syncTickets);
+
+            decisionButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    syncTickets();
+
+                    if (!purchaseForm.reportValidity()) {
+                        validationMessage?.classList.remove('d-none');
+                        return;
+                    }
+
+                    validationMessage?.classList.add('d-none');
+                    document.getElementById('paymentDecision').value = button.getAttribute('data-payment-decision') || '';
+                    purchaseForm.requestSubmit();
+                });
+            });
         })();
     </script>
 }

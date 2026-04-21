@@ -57,6 +57,32 @@ public class EventServiceTests
     }
 
     [Fact]
+    public async Task RegisterAsync_AllowsRepurchase_AfterRefundedRegistration()
+    {
+        await using var dbContext = CreateDbContext(nameof(RegisterAsync_AllowsRepurchase_AfterRefundedRegistration));
+        dbContext.Events.Add(CreateEvent(1, "Refunded Registration Test", true, seatsAvailable: 10));
+        dbContext.Registrations.Add(new Registration
+        {
+            EventId = 1,
+            UserId = "user-1",
+            Tickets = 2,
+            PaymentStatus = "Refunded",
+            AmountPaid = 40,
+            RefundedOnUtc = DateTime.UtcNow.AddDays(-1)
+        });
+        await dbContext.SaveChangesAsync();
+        var service = new EventService(dbContext);
+
+        var result = await service.RegisterAsync("user-1", CreateRegistrationInput(1, 3));
+
+        Assert.True(result);
+        Assert.Single(dbContext.Registrations);
+        Assert.Equal("Paid", dbContext.Registrations.Single().PaymentStatus);
+        Assert.Null(dbContext.Registrations.Single().RefundedOnUtc);
+        Assert.Equal(7, dbContext.Events.Single().SeatsAvailable);
+    }
+
+    [Fact]
     public async Task AddReviewAsync_ReturnsFalse_WhenUserIsNotRegistered()
     {
         await using var dbContext = CreateDbContext(nameof(AddReviewAsync_ReturnsFalse_WhenUserIsNotRegistered));

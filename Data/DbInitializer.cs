@@ -37,13 +37,6 @@ public static class DbInitializer
             dbContext.Database.SetConnectionString(DefaultLocalDbConnection);
         }
 
-        if (await dbContext.Database.CanConnectAsync() && !await DatabaseSchemaIsCompatibleAsync(dbContext))
-        {
-            await dbContext.Database.EnsureDeletedAsync();
-        }
-
-        await dbContext.Database.EnsureCreatedAsync();
-
         foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole, SiteModeratorRole })
         {
             if (!await roleManager.RoleExistsAsync(roleName))
@@ -675,27 +668,5 @@ public static class DbInitializer
         }
 
         await dbContext.SaveChangesAsync();
-    }
-
-    private static async Task<bool> DatabaseSchemaIsCompatibleAsync(ApplicationDbContext dbContext)
-    {
-        await using var connection = dbContext.Database.GetDbConnection();
-        if (connection.State != System.Data.ConnectionState.Open)
-        {
-            await connection.OpenAsync();
-        }
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT
-                SUM(CASE WHEN TABLE_NAME = 'Registrations' AND COLUMN_NAME IN ('AmountPaid', 'CardLast4', 'CardholderName', 'PaymentStatus', 'RefundedOnUtc') THEN 1 ELSE 0 END) +
-                SUM(CASE WHEN TABLE_NAME = 'Reviews' AND COLUMN_NAME IN ('ModerationStatus', 'ModeratedOnUtc', 'ModeratedByUserId') THEN 1 ELSE 0 END) +
-                SUM(CASE WHEN TABLE_NAME = 'UserVenueAssignments' AND COLUMN_NAME IN ('Id', 'UserId', 'VenueId', 'AssignedOnUtc') THEN 1 ELSE 0 END) +
-                SUM(CASE WHEN TABLE_NAME = 'AuditLogs' AND COLUMN_NAME IN ('Id', 'EntityType', 'ActionType', 'EntityId', 'PerformedByUserId', 'PerformedByName', 'Summary', 'CreatedOnUtc') THEN 1 ELSE 0 END)
-            FROM INFORMATION_SCHEMA.COLUMNS
-            """;
-
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result) == 20;
     }
 }

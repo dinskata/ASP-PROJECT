@@ -27,6 +27,7 @@
                                 <tr>
                                     <th>Event</th>
                                     <th>Date</th>
+                                    <th>Starts In</th>
                                     <th>Tickets</th>
                                     <th>Venue</th>
                                     <th>Payment</th>
@@ -40,6 +41,11 @@
                                     <tr>
                                         <td><a asp-controller="Events" asp-action="Details" asp-route-id="@item.EventId">@item.EventTitle</a></td>
                                         <td>@item.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                        <td>
+                                            <span class="small text-secondary purchase-countdown" data-starts-at="@item.StartsAtUtc.ToString("O")">
+                                                @(item.HasStarted ? "Started" : "Calculating...")
+                                            </span>
+                                        </td>
                                         <td>@item.Tickets</td>
                                         <td>@item.Venue</td>
                                         <td>@item.PaymentStatus (@(item.AmountPaid == 0 ? "Free" : $"EUR {item.AmountPaid:F2}"))</td>
@@ -47,11 +53,15 @@
                                         <td>
                                             @if (item.CanRequestRefund)
                                             {
-                                                <form asp-action="Refund" method="post">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="registrationId" value="@item.RegistrationId" />
-                                                    <button class="btn btn-sm btn-outline-danger">Request refund</button>
-                                                </form>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#refundConfirmModal"
+                                                    data-registration-id="@item.RegistrationId"
+                                                    data-event-title="@item.EventTitle">
+                                                    Request refund
+                                                </button>
                                             }
                                             else
                                             {
@@ -72,3 +82,101 @@
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="refundConfirmModal" tabindex="-1" aria-labelledby="refundConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="refundConfirmModalLabel">Confirm refund request</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">You are about to request a refund for:</p>
+                <p class="fw-semibold mb-0" id="refundEventTitle">Selected event</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="Refund" method="post" id="refundConfirmForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="registrationId" id="refundRegistrationId" value="" />
+                    <button class="btn btn-danger">Confirm refund</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const formatCountdown = (target) => {
+                const difference = target.getTime() - Date.now();
+
+                if (difference <= 0) {
+                    return "Started";
+                }
+
+                const totalSeconds = Math.floor(difference / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                if (days > 0) {
+                    return `in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                }
+
+                if (hours > 0) {
+                    return `in ${hours}h ${minutes}m ${seconds}s`;
+                }
+
+                if (minutes > 0) {
+                    return `in ${minutes}m ${seconds}s`;
+                }
+
+                return `in ${seconds}s`;
+            };
+
+            const countdownElements = document.querySelectorAll('.purchase-countdown');
+            const refreshCountdowns = () => {
+                countdownElements.forEach((element) => {
+                    const value = element.getAttribute('data-starts-at');
+                    if (!value) {
+                        return;
+                    }
+
+                    element.textContent = formatCountdown(new Date(value));
+                });
+            };
+
+            refreshCountdowns();
+            window.setInterval(refreshCountdowns, 1000);
+
+            const refundModal = document.getElementById('refundConfirmModal');
+            if (!refundModal) {
+                return;
+            }
+
+            refundModal.addEventListener('show.bs.modal', (event) => {
+                const trigger = event.relatedTarget;
+                if (!trigger) {
+                    return;
+                }
+
+                const registrationId = trigger.getAttribute('data-registration-id') || '';
+                const eventTitle = trigger.getAttribute('data-event-title') || 'Selected event';
+
+                const registrationInput = document.getElementById('refundRegistrationId');
+                const titleTarget = document.getElementById('refundEventTitle');
+
+                if (registrationInput) {
+                    registrationInput.value = registrationId;
+                }
+
+                if (titleTarget) {
+                    titleTarget.textContent = eventTitle;
+                }
+            });
+        })();
+    </script>
+}

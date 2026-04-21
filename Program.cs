@@ -39,6 +39,20 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    if (string.IsNullOrWhiteSpace(dbContext.Database.GetConnectionString()))
+    {
+        dbContext.Database.SetConnectionString(connectionString);
+    }
+
+    var dbConnection = dbContext.Database.GetDbConnection();
+    if (string.IsNullOrWhiteSpace(dbConnection.ConnectionString))
+    {
+        dbConnection.ConnectionString = connectionString;
+    }
+
+    await MigrationBootstrapper.BaselineEnsureCreatedDatabaseAsync(dbContext, connectionString);
+    await dbContext.Database.MigrateAsync();
     await DbInitializer.SeedAsync(scope.ServiceProvider);
 }
 
