@@ -20,5 +20,14 @@ public class Review
     [StringLength(500, MinimumLength = 10)]
     public string Comment { get; set; } = string.Empty;
 
+    [Required]
+    [StringLength(20)]
+    public string ModerationStatus { get; set; } = ReviewModerationStatuses.Pending;
+
+    public DateTime? ModeratedOnUtc { get; set; }
+
+    [StringLength(450)]
+    public string? ModeratedByUserId { get; set; }
+
     public DateTime CreatedOnUtc { get; set; } = DateTime.UtcNow;
 }

@@ -17,6 +17,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Registration> Registrations => Set<Registration>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<UserVenueAssignment> UserVenueAssignments => Set<UserVenueAssignment>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -32,6 +34,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Review>()
             .HasIndex(x => new { x.EventId, x.UserId })
+            .IsUnique();
+
+        builder.Entity<UserVenueAssignment>()
+            .HasIndex(x => new { x.UserId, x.VenueId })
             .IsUnique();
 
         builder.Entity<Event>()
@@ -53,5 +59,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(x => x.Reviews)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<UserVenueAssignment>()
+            .HasOne(x => x.User)
+            .WithMany(x => x.VenueAssignments)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<UserVenueAssignment>()
+            .HasOne(x => x.Venue)
+            .WithMany(x => x.UserAssignments)
+            .HasForeignKey(x => x.VenueId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

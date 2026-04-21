@@ -11,6 +11,10 @@
                 <h1>Platform dashboard</h1>
             </div>
             <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Users" asp-action="Index">Manage Users</a>
+                <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Reviews" asp-action="Index">Moderate Reviews</a>
+                <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Payments" asp-action="Index">Payments</a>
+                <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Audit" asp-action="Index">Audit History</a>
                 <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Venues" asp-action="Index">Manage Venues</a>
                 <a class="btn btn-primary" asp-area="Admin" asp-controller="Events" asp-action="Create">Create Event</a>
             </div>
@@ -20,6 +24,12 @@
             <div class="col-md-3"><div class="feature-card"><h5>Venues</h5><p>@Model.VenuesCount registered locations.</p></div></div>
             <div class="col-md-3"><div class="feature-card"><h5>Registrations</h5><p>@Model.RegistrationsCount attendee bookings.</p></div></div>
             <div class="col-md-3"><div class="feature-card"><h5>Users</h5><p>@Model.UsersCount platform accounts.</p></div></div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-3"><div class="feature-card"><h5>Pending Reviews</h5><p>@Model.PendingReviewsCount review(s) waiting for moderation.</p></div></div>
+            <div class="col-md-3"><div class="feature-card"><h5>Refunded</h5><p>@Model.RefundedPaymentsCount payment(s) refunded.</p></div></div>
+            <div class="col-md-3"><div class="feature-card"><h5>Venue Managers</h5><p>@Model.VenueManagersCount active account(s).</p></div></div>
+            <div class="col-md-3"><div class="feature-card"><h5>Moderators</h5><p>@Model.SiteModeratorsCount active account(s).</p></div></div>
         </div>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
@@ -32,6 +42,43 @@
                         </div>
                     }
                 </div>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <h2 class="h5">Recent audit activity</h2>
+                @if (Model.RecentAuditEntries.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>When</th>
+                                    <th>Area</th>
+                                    <th>Action</th>
+                                    <th>By</th>
+                                    <th>Summary</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entry in Model.RecentAuditEntries)
+                                {
+                                    <tr>
+                                        <td>@entry.CreatedOnUtc.ToLocalTime().ToString("g")</td>
+                                        <td>@entry.EntityType</td>
+                                        <td>@entry.ActionType</td>
+                                        <td>@entry.PerformedByName</td>
+                                        <td>@entry.Summary</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="mb-0 text-secondary">Audit history will appear here once administrators, moderators, or venue managers start making changes.</p>
+                }
             </div>
         </div>
     </div>

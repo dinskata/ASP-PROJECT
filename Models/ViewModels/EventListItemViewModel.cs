@@ -11,6 +11,7 @@ public class EventListItemViewModel
     public decimal Price { get; init; }
     public int SeatsAvailable { get; init; }
     public bool HasEnded { get; init; }
+    public bool IsPublished { get; init; }
     public double AverageRating { get; init; }
     public int ReviewCount { get; init; }
 }

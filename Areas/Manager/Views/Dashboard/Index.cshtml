@@ -1,0 +1,76 @@
+@model ASP_PROJECT.Models.ViewModels.ManagerDashboardViewModel
+@{
+    ViewData["Title"] = "Venue Manager Panel";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Venue management</span>
+                <h1>@Model.ManagerName</h1>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-primary" asp-area="Manager" asp-controller="Venues" asp-action="Index">My Venues</a>
+                <a class="btn btn-primary" asp-area="Manager" asp-controller="Events" asp-action="Create">Create Event</a>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6"><div class="feature-card"><h5>Assigned Venues</h5><p>@Model.AssignedVenuesCount venue(s) under your management.</p></div></div>
+            <div class="col-md-6"><div class="feature-card"><h5>Managed Events</h5><p>@Model.ManagedEventsCount event(s) tied to your venues.</p></div></div>
+        </div>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5">Assigned venues</h2>
+                <div class="row g-3">
+                    @foreach (var venue in Model.AssignedVenues)
+                    {
+                        <div class="col-md-6">
+                            <div class="feature-card h-100">
+                                <h5>@venue.Name</h5>
+                                <p class="text-secondary mb-2">@venue.City</p>
+                                <p class="small mb-3">@venue.Address</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-secondary">@venue.EventCount event(s)</small>
+                                    <a class="btn btn-sm btn-outline-primary" asp-area="Manager" asp-controller="Venues" asp-action="Edit" asp-route-id="@venue.Id">Edit</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Managed events</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Venue</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Tickets Sold</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ManagedEvents)
+                            {
+                                <tr>
+                                    <td>@item.Title</td>
+                                    <td>@item.Venue</td>
+                                    <td>@item.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                    <td>@(item.IsPublished ? "Published" : "Draft")</td>
+                                    <td>@item.TicketsSold</td>
+                                    <td><a class="btn btn-sm btn-outline-primary" asp-area="Manager" asp-controller="Events" asp-action="Edit" asp-route-id="@item.Id">Edit</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

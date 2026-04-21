@@ -35,14 +35,20 @@ public class DashboardServiceTests
         }
 
         public Task<IReadOnlyCollection<RegistrationSummaryViewModel>> GetUserRegistrationsAsync(string userId) => Task.FromResult(_registrations);
-        public Task<IReadOnlyCollection<ReviewableEventViewModel>> GetReviewableEventsAsync(string userId) => throw new NotImplementedException();
+        public Task<IReadOnlyCollection<ReviewableEventViewModel>> GetReviewableEventsAsync(string userId)
+            => Task.FromResult<IReadOnlyCollection<ReviewableEventViewModel>>(new[]
+            {
+                new ReviewableEventViewModel { EventId = 11, HasExistingReview = true },
+                new ReviewableEventViewModel { EventId = 12, HasExistingReview = false }
+            });
         public Task<ASP_PROJECT.Models.ViewModels.EventListViewModel> GetPublishedEventsAsync(string? searchTerm, int? categoryId, string? statusFilter, int pageNumber, int pageSize) => throw new NotImplementedException();
+        public Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null) => throw new NotImplementedException();
         public Task<ASP_PROJECT.Models.ViewModels.EventDetailsViewModel?> GetDetailsAsync(int id) => throw new NotImplementedException();
         public Task<IReadOnlyCollection<ASP_PROJECT.Models.Category>> GetCategoriesAsync() => throw new NotImplementedException();
         public Task<IReadOnlyCollection<ASP_PROJECT.Models.Venue>> GetVenuesAsync() => throw new NotImplementedException();
-        public Task<ASP_PROJECT.Models.ViewModels.EventEditViewModel> BuildEditorAsync(int? id) => throw new NotImplementedException();
-        public Task<int> CreateAsync(ASP_PROJECT.Models.ViewModels.EventEditViewModel model) => throw new NotImplementedException();
-        public Task<bool> UpdateAsync(ASP_PROJECT.Models.ViewModels.EventEditViewModel model) => throw new NotImplementedException();
+        public Task<ASP_PROJECT.Models.ViewModels.EventEditViewModel> BuildEditorAsync(int? id, IReadOnlyCollection<int>? allowedVenueIds = null) => throw new NotImplementedException();
+        public Task<int> CreateAsync(ASP_PROJECT.Models.ViewModels.EventEditViewModel model, string? actorId = null, string? actorName = null, IReadOnlyCollection<int>? allowedVenueIds = null) => throw new NotImplementedException();
+        public Task<bool> UpdateAsync(ASP_PROJECT.Models.ViewModels.EventEditViewModel model, string? actorId = null, string? actorName = null, IReadOnlyCollection<int>? allowedVenueIds = null) => throw new NotImplementedException();
         public Task<bool> RegisterAsync(string userId, ASP_PROJECT.Models.ViewModels.RegistrationInputModel model) => throw new NotImplementedException();
         public Task<bool> RequestRefundAsync(string userId, int registrationId) => throw new NotImplementedException();
         public Task<bool> AddReviewAsync(string userId, ASP_PROJECT.Models.ViewModels.ReviewInputModel model) => throw new NotImplementedException();

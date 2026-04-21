@@ -25,4 +25,5 @@ public class Venue
     public string Description { get; set; } = string.Empty;
 
     public ICollection<Event> Events { get; set; } = new List<Event>();
+    public ICollection<UserVenueAssignment> UserAssignments { get; set; } = new List<UserVenueAssignment>();
 }

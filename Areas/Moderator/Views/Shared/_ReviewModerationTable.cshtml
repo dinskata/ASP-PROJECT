@@ -1,0 +1,53 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.ReviewModerationListItemViewModel>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Author</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                        <th>Comment</th>
+                        <th>Submitted</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div>@item.EventTitle</div>
+                                <small class="text-secondary">@item.VenueName</small>
+                            </td>
+                            <td>@item.AuthorName</td>
+                            <td>@item.Rating / 5</td>
+                            <td>@item.ModerationStatus</td>
+                            <td>@item.Comment</td>
+                            <td>@item.CreatedOnUtc.ToLocalTime().ToString("g")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form asp-action="Moderate" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="reviewId" value="@item.ReviewId" />
+                                        <input type="hidden" name="decision" value="Approved" />
+                                        <button class="btn btn-sm btn-outline-success">Approve</button>
+                                    </form>
+                                    <form asp-action="Moderate" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="reviewId" value="@item.ReviewId" />
+                                        <input type="hidden" name="decision" value="Rejected" />
+                                        <button class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -32,7 +32,7 @@ public class EventService : IEventService
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var normalized = searchTerm.Trim().ToLower();
+            var normalized = searchTerm.Trim().ToLowerInvariant();
             query = query.Where(x =>
                 x.Title.ToLower().Contains(normalized) ||
                 x.Venue!.City.ToLower().Contains(normalized) ||
@@ -55,7 +55,12 @@ public class EventService : IEventService
 
         query = query
             .OrderBy(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now)
-            .ThenBy(x => x.StartsAtUtc);
+            .ThenBy(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now
+                ? DateTime.MaxValue
+                : x.StartsAtUtc)
+            .ThenByDescending(x => x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now
+                ? x.StartsAtUtc.AddMinutes(x.DurationMinutes)
+                : DateTime.MinValue);
 
         var totalItems = await query.CountAsync();
         var items = await query
@@ -72,8 +77,11 @@ public class EventService : IEventService
                 Price = x.Price,
                 SeatsAvailable = x.SeatsAvailable,
                 HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now,
-                AverageRating = x.Reviews.Count == 0 ? 0 : x.Reviews.Average(r => r.Rating),
-                ReviewCount = x.Reviews.Count
+                AverageRating = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                    ? 0
+                    : x.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                ReviewCount = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
+                IsPublished = x.IsPublished
             })
             .ToListAsync();
 
@@ -91,6 +99,50 @@ public class EventService : IEventService
                 TotalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)pageSize))
             }
         };
+    }
+
+    public async Task<IReadOnlyCollection<ManagementEventListItemViewModel>> GetManagementEventsAsync(string? searchTerm, IReadOnlyCollection<int>? allowedVenueIds = null)
+    {
+        var query = _dbContext.Events
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .Include(x => x.Venue)
+            .Include(x => x.Registrations)
+            .Include(x => x.Reviews)
+            .AsQueryable();
+
+        if (allowedVenueIds is { Count: > 0 })
+        {
+            query = query.Where(x => allowedVenueIds.Contains(x.VenueId));
+        }
+        else if (allowedVenueIds is not null)
+        {
+            query = query.Where(_ => false);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalized = searchTerm.Trim().ToLowerInvariant();
+            query = query.Where(x =>
+                x.Title.ToLower().Contains(normalized) ||
+                x.Category!.Name.ToLower().Contains(normalized) ||
+                x.Venue!.Name.ToLower().Contains(normalized));
+        }
+
+        return await query
+            .OrderBy(x => x.StartsAtUtc)
+            .Select(x => new ManagementEventListItemViewModel
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Category = x.Category!.Name,
+                Venue = x.Venue!.Name,
+                StartsAtUtc = x.StartsAtUtc,
+                IsPublished = x.IsPublished,
+                TicketsSold = x.Registrations.Sum(r => r.Tickets),
+                ReviewCount = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved)
+            })
+            .ToListAsync();
     }
 
     public async Task<EventDetailsViewModel?> GetDetailsAsync(int id)
@@ -116,9 +168,12 @@ public class EventService : IEventService
                 Price = x.Price,
                 SeatsAvailable = x.SeatsAvailable,
                 HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= DateTime.UtcNow,
-                AverageRating = x.Reviews.Count == 0 ? 0 : x.Reviews.Average(r => r.Rating),
-                ReviewCount = x.Reviews.Count,
+                AverageRating = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                    ? 0
+                    : x.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                ReviewCount = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
                 Reviews = x.Reviews
+                    .Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved)
                     .OrderByDescending(r => r.CreatedOnUtc)
                     .Select(r => new ReviewSummaryViewModel
                     {
@@ -138,12 +193,22 @@ public class EventService : IEventService
     public async Task<IReadOnlyCollection<Venue>> GetVenuesAsync()
         => await _dbContext.Venues.AsNoTracking().OrderBy(x => x.Name).ToListAsync();
 
-    public async Task<EventEditViewModel> BuildEditorAsync(int? id)
+    public async Task<EventEditViewModel> BuildEditorAsync(int? id, IReadOnlyCollection<int>? allowedVenueIds = null)
     {
+        var venuesQuery = _dbContext.Venues.AsNoTracking().OrderBy(x => x.Name).AsQueryable();
+        if (allowedVenueIds is { Count: > 0 })
+        {
+            venuesQuery = venuesQuery.Where(x => allowedVenueIds.Contains(x.Id));
+        }
+        else if (allowedVenueIds is not null)
+        {
+            venuesQuery = venuesQuery.Where(_ => false);
+        }
+
         var model = new EventEditViewModel
         {
             Categories = await GetCategoriesAsync(),
-            Venues = await GetVenuesAsync()
+            Venues = await venuesQuery.ToListAsync()
         };
 
         if (!id.HasValue)
@@ -151,8 +216,13 @@ public class EventService : IEventService
             return model;
         }
 
-        var entity = await _dbContext.Events.FindAsync(id.Value);
+        var entity = await _dbContext.Events.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id.Value);
         if (entity is null)
+        {
+            return model;
+        }
+
+        if (allowedVenueIds is not null && !allowedVenueIds.Contains(entity.VenueId))
         {
             return model;
         }
@@ -170,8 +240,13 @@ public class EventService : IEventService
         return model;
     }
 
-    public async Task<int> CreateAsync(EventEditViewModel model)
+    public async Task<int> CreateAsync(EventEditViewModel model, string? actorId = null, string? actorName = null, IReadOnlyCollection<int>? allowedVenueIds = null)
     {
+        if (allowedVenueIds is not null && !allowedVenueIds.Contains(model.VenueId))
+        {
+            return 0;
+        }
+
         var entity = new Event
         {
             Title = model.Title.Trim(),
@@ -187,10 +262,11 @@ public class EventService : IEventService
 
         _dbContext.Events.Add(entity);
         await _dbContext.SaveChangesAsync();
+        await LogAuditAsync("Event", "Create", actorId, actorName, $"Created event {entity.Title}.", entity.Id);
         return entity.Id;
     }
 
-    public async Task<bool> UpdateAsync(EventEditViewModel model)
+    public async Task<bool> UpdateAsync(EventEditViewModel model, string? actorId = null, string? actorName = null, IReadOnlyCollection<int>? allowedVenueIds = null)
     {
         if (!model.Id.HasValue)
         {
@@ -199,6 +275,11 @@ public class EventService : IEventService
 
         var entity = await _dbContext.Events.FindAsync(model.Id.Value);
         if (entity is null)
+        {
+            return false;
+        }
+
+        if (allowedVenueIds is not null && (!allowedVenueIds.Contains(entity.VenueId) || !allowedVenueIds.Contains(model.VenueId)))
         {
             return false;
         }
@@ -214,6 +295,7 @@ public class EventService : IEventService
         entity.VenueId = model.VenueId;
 
         await _dbContext.SaveChangesAsync();
+        await LogAuditAsync("Event", "Update", actorId, actorName, $"Updated event {entity.Title}.", entity.Id);
         return true;
     }
 
@@ -249,6 +331,9 @@ public class EventService : IEventService
 
         eventEntity.SeatsAvailable -= model.Tickets;
         await _dbContext.SaveChangesAsync();
+
+        var actorName = await GetUserDisplayNameAsync(userId);
+        await LogAuditAsync("Payment", "Purchase", userId, actorName, $"Purchased {model.Tickets} ticket(s) for {eventEntity.Title}.", eventEntity.Id);
         return true;
     }
 
@@ -277,6 +362,8 @@ public class EventService : IEventService
         registration.Event.SeatsAvailable += registration.Tickets;
 
         await _dbContext.SaveChangesAsync();
+        var actorName = await GetUserDisplayNameAsync(userId);
+        await LogAuditAsync("Payment", "RefundRequest", userId, actorName, $"Refund requested for {registration.Event.Title}.", registration.Id);
         return true;
     }
 
@@ -307,10 +394,13 @@ public class EventService : IEventService
             EventId = model.EventId,
             UserId = userId,
             Rating = model.Rating,
-            Comment = model.Comment.Trim()
+            Comment = model.Comment.Trim(),
+            ModerationStatus = ReviewModerationStatuses.Pending
         });
 
         await _dbContext.SaveChangesAsync();
+        var actorName = await GetUserDisplayNameAsync(userId);
+        await LogAuditAsync("Review", "Create", userId, actorName, $"Submitted review for {eventEntity.Title}.", model.EventId);
         return true;
     }
 
@@ -357,23 +447,38 @@ public class EventService : IEventService
                 StartsAtUtc = x.Event.StartsAtUtc,
                 HasExistingReview = x.Event.Reviews.Any(r => r.UserId == userId),
                 ExistingComment = x.Event.Reviews.Where(r => r.UserId == userId).Select(r => r.Comment).FirstOrDefault() ?? string.Empty,
-                ExistingRating = x.Event.Reviews.Where(r => r.UserId == userId).Select(r => r.Rating).FirstOrDefault()
+                ExistingRating = x.Event.Reviews.Where(r => r.UserId == userId).Select(r => r.Rating).FirstOrDefault(),
+                ModerationStatus = x.Event.Reviews.Where(r => r.UserId == userId).Select(r => r.ModerationStatus).FirstOrDefault() ?? string.Empty
             })
             .ToListAsync();
     }
 
     public async Task<AdminDashboardViewModel> GetAdminDashboardAsync()
     {
+        var venueManagerRoleId = await _dbContext.Roles
+            .Where(x => x.Name == DbInitializer.VenueManagerRole)
+            .Select(x => x.Id)
+            .SingleOrDefaultAsync();
+        var siteModeratorRoleId = await _dbContext.Roles
+            .Where(x => x.Name == DbInitializer.SiteModeratorRole)
+            .Select(x => x.Id)
+            .SingleOrDefaultAsync();
+
         return new AdminDashboardViewModel
         {
             EventsCount = await _dbContext.Events.CountAsync(),
             VenuesCount = await _dbContext.Venues.CountAsync(),
             RegistrationsCount = await _dbContext.Registrations.CountAsync(),
             UsersCount = await _dbContext.Users.CountAsync(),
+            PendingReviewsCount = await _dbContext.Reviews.CountAsync(x => x.ModerationStatus == ReviewModerationStatuses.Pending),
+            RefundedPaymentsCount = await _dbContext.Registrations.CountAsync(x => x.PaymentStatus == "Refunded"),
+            VenueManagersCount = string.IsNullOrWhiteSpace(venueManagerRoleId) ? 0 : await _dbContext.UserRoles.CountAsync(x => x.RoleId == venueManagerRoleId),
+            SiteModeratorsCount = string.IsNullOrWhiteSpace(siteModeratorRoleId) ? 0 : await _dbContext.UserRoles.CountAsync(x => x.RoleId == siteModeratorRoleId),
             NextEvents = await _dbContext.Events
                 .AsNoTracking()
                 .Include(x => x.Category)
                 .Include(x => x.Venue)
+                .Include(x => x.Reviews)
                 .OrderBy(x => x.StartsAtUtc)
                 .Take(5)
                 .Select(x => new EventListItemViewModel
@@ -382,15 +487,53 @@ public class EventService : IEventService
                     Title = x.Title,
                     Category = x.Category!.Name,
                     Venue = x.Venue!.Name,
-                City = x.Venue.City,
-                StartsAtUtc = x.StartsAtUtc,
-                Price = x.Price,
-                SeatsAvailable = x.SeatsAvailable,
-                HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= DateTime.UtcNow,
-                AverageRating = 0,
-                ReviewCount = 0
-            })
-            .ToListAsync()
+                    City = x.Venue.City,
+                    StartsAtUtc = x.StartsAtUtc,
+                    Price = x.Price,
+                    SeatsAvailable = x.SeatsAvailable,
+                    HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= DateTime.UtcNow,
+                    AverageRating = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                        ? 0
+                        : x.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                    ReviewCount = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
+                    IsPublished = x.IsPublished
+                })
+                .ToListAsync(),
+            RecentAuditEntries = await _dbContext.AuditLogs
+                .AsNoTracking()
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .Take(8)
+                .Select(x => new AuditLogListItemViewModel
+                {
+                    EntityType = x.EntityType,
+                    ActionType = x.ActionType,
+                    EntityId = x.EntityId,
+                    PerformedByName = x.PerformedByName,
+                    Summary = x.Summary,
+                    CreatedOnUtc = x.CreatedOnUtc
+                })
+                .ToListAsync()
         };
+    }
+
+    private async Task<string> GetUserDisplayNameAsync(string userId)
+        => await _dbContext.Users
+            .Where(x => x.Id == userId)
+            .Select(x => x.FullName)
+            .SingleOrDefaultAsync() ?? "User";
+
+    private async Task LogAuditAsync(string entityType, string actionType, string? actorId, string? actorName, string summary, int? entityId)
+    {
+        _dbContext.AuditLogs.Add(new AuditLog
+        {
+            EntityType = entityType,
+            ActionType = actionType,
+            EntityId = entityId,
+            PerformedByUserId = actorId,
+            PerformedByName = string.IsNullOrWhiteSpace(actorName) ? "System" : actorName,
+            Summary = summary
+        });
+
+        await _dbContext.SaveChangesAsync();
     }
 }

@@ -14,10 +14,10 @@
 
         @if (Model.Any())
         {
-            <div class="vstack gap-4">
+            <div class="reviews-stack">
                 @foreach (var item in Model)
                 {
-                    <div class="card border-0 shadow-sm">
+                    <div class="card border-0 shadow-sm review-shell-card">
                         <div class="card-body">
                             <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
                                 <div>
@@ -26,7 +26,18 @@
                                 </div>
                                 @if (item.HasExistingReview)
                                 {
-                                    <span class="badge bg-success-subtle text-success-emphasis">Reviewed</span>
+                                    @if (item.ModerationStatus == ASP_PROJECT.Models.ReviewModerationStatuses.Approved)
+                                    {
+                                        <span class="badge bg-success-subtle text-success-emphasis">Approved</span>
+                                    }
+                                    else if (item.ModerationStatus == ASP_PROJECT.Models.ReviewModerationStatuses.Rejected)
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger-emphasis">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning-subtle text-dark">Pending moderation</span>
+                                    }
                                 }
                                 else
                                 {
@@ -38,6 +49,7 @@
                             {
                                 <div class="review-item">
                                     <div class="small text-warning">Rating: @item.ExistingRating / 5</div>
+                                    <div class="small text-secondary mb-2">Status: @item.ModerationStatus</div>
                                     <p class="mb-0">@item.ExistingComment</p>
                                 </div>
                             }

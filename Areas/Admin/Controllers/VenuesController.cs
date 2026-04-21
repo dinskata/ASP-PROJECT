@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ASP_PROJECT.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = DbInitializer.AdministratorRole + "," + DbInitializer.VenueManagerRole)]
+[Authorize(Roles = DbInitializer.AdministratorRole)]
 public class VenuesController : Controller
 {
     private readonly IVenueService _venueService;
@@ -20,6 +20,25 @@ public class VenuesController : Controller
     public async Task<IActionResult> Index()
     {
         return View(await _venueService.GetAllForManagementAsync());
+    }
+
+    public IActionResult Create()
+    {
+        return View(new VenueEditViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(VenueEditViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var id = await _venueService.CreateAsync(model, GetActorId(), GetActorName());
+        TempData["StatusMessage"] = "Venue created successfully.";
+        return RedirectToAction(nameof(Edit), new { id });
     }
 
     public async Task<IActionResult> Edit(int id)
@@ -42,7 +61,7 @@ public class VenuesController : Controller
             return View(model);
         }
 
-        var updated = await _venueService.UpdateAsync(model);
+        var updated = await _venueService.UpdateAsync(model, GetActorId(), GetActorName());
         if (!updated)
         {
             return NotFound();
@@ -51,4 +70,10 @@ public class VenuesController : Controller
         TempData["StatusMessage"] = "Venue updated successfully.";
         return RedirectToAction(nameof(Edit), new { id = model.Id });
     }
+
+    private string? GetActorId()
+        => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    private string GetActorName()
+        => User.Identity?.Name ?? "Administrator";
 }

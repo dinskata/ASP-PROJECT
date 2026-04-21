@@ -16,9 +16,9 @@ public class EventsController : Controller
         _eventService = eventService;
     }
 
-    public async Task<IActionResult> Index(string? searchTerm, int? categoryId, int page = 1)
+    public async Task<IActionResult> Index(string? searchTerm)
     {
-        return View(await _eventService.GetPublishedEventsAsync(searchTerm, categoryId, "all", page, 10));
+        return View(await _eventService.GetManagementEventsAsync(searchTerm));
     }
 
     public async Task<IActionResult> Create()
@@ -37,7 +37,15 @@ public class EventsController : Controller
             return View(model);
         }
 
-        var id = await _eventService.CreateAsync(model);
+        var id = await _eventService.CreateAsync(model, GetActorId(), GetActorName());
+        if (id == 0)
+        {
+            model.Categories = await _eventService.GetCategoriesAsync();
+            model.Venues = await _eventService.GetVenuesAsync();
+            ModelState.AddModelError(string.Empty, "Event could not be created.");
+            return View(model);
+        }
+
         return RedirectToAction(nameof(Edit), new { id });
     }
 
@@ -63,7 +71,7 @@ public class EventsController : Controller
             return View(model);
         }
 
-        var updated = await _eventService.UpdateAsync(model);
+        var updated = await _eventService.UpdateAsync(model, GetActorId(), GetActorName());
         if (!updated)
         {
             return NotFound();
@@ -72,4 +80,10 @@ public class EventsController : Controller
         TempData["StatusMessage"] = "Event updated successfully.";
         return RedirectToAction(nameof(Edit), new { id = model.Id });
     }
+
+    private string? GetActorId()
+        => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    private string GetActorName()
+        => User.Identity?.Name ?? "Administrator";
 }

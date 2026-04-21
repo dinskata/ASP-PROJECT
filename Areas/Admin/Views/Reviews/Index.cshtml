@@ -1,0 +1,31 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.ReviewModerationListItemViewModel>
+@{
+    ViewData["Title"] = "Review Moderation";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Review moderation</h1>
+            </div>
+        </div>
+        <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+            <div class="row g-3">
+                <div class="col-md-10">
+                    <select name="statusFilter" class="form-select">
+                        <option value="all" selected="@(ViewBag.StatusFilter == "all")">All reviews</option>
+                        <option value="Pending" selected="@(ViewBag.StatusFilter == "Pending")">Pending</option>
+                        <option value="Approved" selected="@(ViewBag.StatusFilter == "Approved")">Approved</option>
+                        <option value="Rejected" selected="@(ViewBag.StatusFilter == "Rejected")">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
+        <partial name="~/Areas/Moderator/Views/Shared/_ReviewModerationTable.cshtml" model="Model" />
+    </div>
+</section>

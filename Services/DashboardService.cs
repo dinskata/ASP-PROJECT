@@ -15,11 +15,12 @@ public class DashboardService : IDashboardService
     public async Task<DashboardViewModel> GetUserDashboardAsync(string userId, string userName)
     {
         var registrations = await _eventService.GetUserRegistrationsAsync(userId);
+        var reviewables = await _eventService.GetReviewableEventsAsync(userId);
         return new DashboardViewModel
         {
             UserName = userName,
             RegistrationsCount = registrations.Count,
-            ReviewsCount = 0,
+            ReviewsCount = reviewables.Count(x => x.HasExistingReview),
             UpcomingRegistrations = registrations
         };
     }

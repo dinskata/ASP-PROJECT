@@ -1,0 +1,59 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.PaymentManagementItemViewModel>
+@{
+    ViewData["Title"] = "Payments";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Payments and refunds</h1>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Buyer</th>
+                                <th>Tickets</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Card</th>
+                                <th>Ordered</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.EventTitle</td>
+                                    <td>@item.BuyerName</td>
+                                    <td>@item.Tickets</td>
+                                    <td>@(item.AmountPaid == 0 ? "Free" : $"EUR {item.AmountPaid:F2}")</td>
+                                    <td>@item.PaymentStatus</td>
+                                    <td>@(string.IsNullOrWhiteSpace(item.CardLast4) ? "-" : $"**** {item.CardLast4}")</td>
+                                    <td>@item.RegisteredOnUtc.ToLocalTime().ToString("g")</td>
+                                    <td>
+                                        @if (item.CanForceRefund)
+                                        {
+                                            <form asp-action="Refund" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="registrationId" value="@item.RegistrationId" />
+                                                <button class="btn btn-sm btn-outline-danger">Force refund</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

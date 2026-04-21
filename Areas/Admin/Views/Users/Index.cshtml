@@ -1,0 +1,46 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.UserAdminListItemViewModel>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Users and roles</h1>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Roles</th>
+                                <th>Assigned Venues</th>
+                                <th>Created</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>@user.FullName</td>
+                                    <td>@user.Email</td>
+                                    <td>@user.RolesDisplay</td>
+                                    <td>@user.AssignedVenuesCount</td>
+                                    <td>@user.CreatedOnUtc.ToLocalTime().ToString("g")</td>
+                                    <td><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@user.Id">Manage</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

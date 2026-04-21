@@ -1,0 +1,44 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.AuditLogListItemViewModel>
+@{
+    ViewData["Title"] = "Audit History";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Audit history</h1>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>When</th>
+                                <th>Entity</th>
+                                <th>Action</th>
+                                <th>By</th>
+                                <th>Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in Model)
+                            {
+                                <tr>
+                                    <td>@entry.CreatedOnUtc.ToLocalTime().ToString("g")</td>
+                                    <td>@entry.EntityType</td>
+                                    <td>@entry.ActionType</td>
+                                    <td>@entry.PerformedByName</td>
+                                    <td>@entry.Summary</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

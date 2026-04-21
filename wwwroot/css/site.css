@@ -476,6 +476,15 @@ a:hover {
   border-bottom: 1px solid #ece7df;
 }
 
+.reviews-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.review-shell-card {
+  padding: 0.35rem;
+}
+
 .announcement-entry:last-child,
 .review-item:last-child {
   border-bottom: 0;

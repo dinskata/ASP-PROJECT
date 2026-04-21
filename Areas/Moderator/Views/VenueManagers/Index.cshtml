@@ -1,0 +1,42 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.UserAdminListItemViewModel>
+@{
+    ViewData["Title"] = "Venue Managers";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Moderation</span>
+                <h1>Venue manager assignments</h1>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Assigned Venues</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.FullName</td>
+                                    <td>@item.Email</td>
+                                    <td>@item.AssignedVenuesCount</td>
+                                    <td><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Assign venues</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

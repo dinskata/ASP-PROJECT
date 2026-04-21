@@ -1,4 +1,5 @@
 using ASP_PROJECT.Data;
+using ASP_PROJECT.Models;
 using ASP_PROJECT.Models.ViewModels;
 using ASP_PROJECT.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ public class VenueService : IVenueService
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var normalized = searchTerm.Trim().ToLower();
+            var normalized = searchTerm.Trim().ToLowerInvariant();
             query = query.Where(x => x.Name.ToLower().Contains(normalized) || x.City.ToLower().Contains(normalized));
         }
 
@@ -40,7 +41,11 @@ public class VenueService : IVenueService
                 City = x.City,
                 Address = x.Address,
                 Capacity = x.Capacity,
-                EventCount = x.Events.Count
+                EventCount = x.Events.Count,
+                AverageRating = x.Events.SelectMany(e => e.Reviews).Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                    ? 0
+                    : x.Events.SelectMany(e => e.Reviews).Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                ReviewCount = x.Events.SelectMany(e => e.Reviews).Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved)
             })
             .ToListAsync();
 
@@ -68,6 +73,10 @@ public class VenueService : IVenueService
                 Address = x.Address,
                 Capacity = x.Capacity,
                 Description = x.Description,
+                AverageRating = x.Events.SelectMany(e => e.Reviews).Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                    ? 0
+                    : x.Events.SelectMany(e => e.Reviews).Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                ReviewCount = x.Events.SelectMany(e => e.Reviews).Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
                 UpcomingEvents = x.Events
                     .Where(e => e.IsPublished && e.StartsAtUtc.AddMinutes(e.DurationMinutes) > now)
                     .OrderBy(e => e.StartsAtUtc)
@@ -82,13 +91,16 @@ public class VenueService : IVenueService
                         Price = e.Price,
                         SeatsAvailable = e.SeatsAvailable,
                         HasEnded = false,
-                        AverageRating = e.Reviews.Count == 0 ? 0 : e.Reviews.Average(r => r.Rating),
-                        ReviewCount = e.Reviews.Count
+                        AverageRating = e.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                            ? 0
+                            : e.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                        ReviewCount = e.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
+                        IsPublished = e.IsPublished
                     })
                     .ToList(),
                 EndedEvents = x.Events
                     .Where(e => e.IsPublished && e.StartsAtUtc.AddMinutes(e.DurationMinutes) <= now)
-                    .OrderByDescending(e => e.StartsAtUtc)
+                    .OrderByDescending(e => e.StartsAtUtc.AddMinutes(e.DurationMinutes))
                     .Select(e => new EventListItemViewModel
                     {
                         Id = e.Id,
@@ -100,21 +112,36 @@ public class VenueService : IVenueService
                         Price = e.Price,
                         SeatsAvailable = e.SeatsAvailable,
                         HasEnded = true,
-                        AverageRating = e.Reviews.Count == 0 ? 0 : e.Reviews.Average(r => r.Rating),
-                        ReviewCount = e.Reviews.Count
+                        AverageRating = e.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                            ? 0
+                            : e.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                        ReviewCount = e.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
+                        IsPublished = e.IsPublished
                     })
                     .ToList()
             })
             .SingleOrDefaultAsync();
     }
 
-    public async Task<IReadOnlyCollection<VenueListItemViewModel>> GetAllForManagementAsync()
+    public async Task<IReadOnlyCollection<VenueListItemViewModel>> GetAllForManagementAsync(IReadOnlyCollection<int>? allowedVenueIds = null)
     {
-        return await _dbContext.Venues
+        var query = _dbContext.Venues
             .AsNoTracking()
             .Include(x => x.Events)
             .OrderBy(x => x.City)
             .ThenBy(x => x.Name)
+            .AsQueryable();
+
+        if (allowedVenueIds is { Count: > 0 })
+        {
+            query = query.Where(x => allowedVenueIds.Contains(x.Id));
+        }
+        else if (allowedVenueIds is not null)
+        {
+            query = query.Where(_ => false);
+        }
+
+        return await query
             .Select(x => new VenueListItemViewModel
             {
                 Id = x.Id,
@@ -122,13 +149,22 @@ public class VenueService : IVenueService
                 City = x.City,
                 Address = x.Address,
                 Capacity = x.Capacity,
-                EventCount = x.Events.Count
+                EventCount = x.Events.Count,
+                AverageRating = x.Events.SelectMany(e => e.Reviews).Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                    ? 0
+                    : x.Events.SelectMany(e => e.Reviews).Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating),
+                ReviewCount = x.Events.SelectMany(e => e.Reviews).Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved)
             })
             .ToListAsync();
     }
 
-    public async Task<VenueEditViewModel?> BuildEditorAsync(int id)
+    public async Task<VenueEditViewModel?> BuildEditorAsync(int id, IReadOnlyCollection<int>? allowedVenueIds = null)
     {
+        if (allowedVenueIds is not null && !allowedVenueIds.Contains(id))
+        {
+            return null;
+        }
+
         return await _dbContext.Venues
             .AsNoTracking()
             .Where(x => x.Id == id)
@@ -144,8 +180,30 @@ public class VenueService : IVenueService
             .SingleOrDefaultAsync();
     }
 
-    public async Task<bool> UpdateAsync(VenueEditViewModel model)
+    public async Task<int> CreateAsync(VenueEditViewModel model, string? actorId = null, string? actorName = null)
     {
+        var venue = new Venue
+        {
+            Name = model.Name.Trim(),
+            City = model.City.Trim(),
+            Address = model.Address.Trim(),
+            Capacity = model.Capacity,
+            Description = model.Description.Trim()
+        };
+
+        _dbContext.Venues.Add(venue);
+        await _dbContext.SaveChangesAsync();
+        await LogAuditAsync("Venue", "Create", actorId, actorName, $"Created venue {venue.Name}.", venue.Id);
+        return venue.Id;
+    }
+
+    public async Task<bool> UpdateAsync(VenueEditViewModel model, string? actorId = null, string? actorName = null, IReadOnlyCollection<int>? allowedVenueIds = null)
+    {
+        if (allowedVenueIds is not null && !allowedVenueIds.Contains(model.Id))
+        {
+            return false;
+        }
+
         var venue = await _dbContext.Venues.FindAsync(model.Id);
         if (venue is null)
         {
@@ -159,6 +217,22 @@ public class VenueService : IVenueService
         venue.Description = model.Description.Trim();
 
         await _dbContext.SaveChangesAsync();
+        await LogAuditAsync("Venue", "Update", actorId, actorName, $"Updated venue {venue.Name}.", venue.Id);
         return true;
+    }
+
+    private async Task LogAuditAsync(string entityType, string actionType, string? actorId, string? actorName, string summary, int? entityId)
+    {
+        _dbContext.AuditLogs.Add(new AuditLog
+        {
+            EntityType = entityType,
+            ActionType = actionType,
+            EntityId = entityId,
+            PerformedByUserId = actorId,
+            PerformedByName = string.IsNullOrWhiteSpace(actorName) ? "System" : actorName,
+            Summary = summary
+        });
+
+        await _dbContext.SaveChangesAsync();
     }
 }

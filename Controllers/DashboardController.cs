@@ -50,7 +50,7 @@ public class DashboardController : Controller
 
         var success = await eventService.AddReviewAsync(userId, model);
         TempData["StatusMessage"] = success
-            ? "Review submitted."
+            ? "Review submitted and sent for moderation."
             : "Review could not be submitted. Only verified attendees can review ended events once.";
 
         return RedirectToAction(nameof(Reviews));

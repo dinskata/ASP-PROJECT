@@ -39,7 +39,17 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="fw-semibold">Capacity: @venue.Capacity</div>
-                                    <small class="text-secondary">@venue.EventCount event(s)</small>
+                                    <small class="text-secondary">
+                                        @venue.EventCount event(s)
+                                        @if (venue.ReviewCount > 0)
+                                        {
+                                            <text> • @venue.AverageRating.ToString("F1")/5 venue rating from @venue.ReviewCount review(s)</text>
+                                        }
+                                        else
+                                        {
+                                            <text> • No venue reviews yet</text>
+                                        }
+                                    </small>
                                 </div>
                                 <a class="btn btn-outline-primary" asp-action="Details" asp-route-id="@venue.Id">Details</a>
                             </div>

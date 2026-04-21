@@ -37,7 +37,7 @@ public static class DbInitializer
             dbContext.Database.SetConnectionString(DefaultLocalDbConnection);
         }
 
-        if (await dbContext.Database.CanConnectAsync() && !await RegistrationPurchaseColumnsExistAsync(dbContext))
+        if (await dbContext.Database.CanConnectAsync() && !await DatabaseSchemaIsCompatibleAsync(dbContext))
         {
             await dbContext.Database.EnsureDeletedAsync();
         }
@@ -356,7 +356,7 @@ public static class DbInitializer
                 UserName = AdminEmail,
                 Email = AdminEmail,
                 EmailConfirmed = true,
-                FullName = "Platform Administrator"
+                FullName = "Elena Petrova"
             };
 
             var result = await userManager.CreateAsync(adminUser, AdminPassword);
@@ -364,6 +364,12 @@ public static class DbInitializer
             {
                 throw new InvalidOperationException("Failed to create seeded administrator user.");
             }
+        }
+
+        if (adminUser.FullName != "Elena Petrova")
+        {
+            adminUser.FullName = "Elena Petrova";
+            await userManager.UpdateAsync(adminUser);
         }
 
         if (!await userManager.IsInRoleAsync(adminUser, AdministratorRole))
@@ -384,7 +390,7 @@ public static class DbInitializer
                 UserName = TestUserEmail,
                 Email = TestUserEmail,
                 EmailConfirmed = true,
-                FullName = "Test User"
+                FullName = "Martin Kolev"
             };
 
             var testUserResult = await userManager.CreateAsync(testUser, TestUserPassword);
@@ -392,6 +398,12 @@ public static class DbInitializer
             {
                 throw new InvalidOperationException("Failed to create seeded test user.");
             }
+        }
+
+        if (testUser.FullName != "Martin Kolev")
+        {
+            testUser.FullName = "Martin Kolev";
+            await userManager.UpdateAsync(testUser);
         }
 
         if (!await userManager.IsInRoleAsync(testUser, BuyerRole))
@@ -407,7 +419,7 @@ public static class DbInitializer
                 UserName = TestVenueManagerEmail,
                 Email = TestVenueManagerEmail,
                 EmailConfirmed = true,
-                FullName = "Test Venue Manager"
+                FullName = "Nikolay Dimitrov"
             };
 
             var venueManagerResult = await userManager.CreateAsync(venueManagerUser, TestVenueManagerPassword);
@@ -415,6 +427,12 @@ public static class DbInitializer
             {
                 throw new InvalidOperationException("Failed to create seeded venue manager user.");
             }
+        }
+
+        if (venueManagerUser.FullName != "Nikolay Dimitrov")
+        {
+            venueManagerUser.FullName = "Nikolay Dimitrov";
+            await userManager.UpdateAsync(venueManagerUser);
         }
 
         if (!await userManager.IsInRoleAsync(venueManagerUser, VenueManagerRole))
@@ -427,6 +445,18 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(venueManagerUser, BuyerRole);
         }
 
+        foreach (var venueId in new[] { skyline.Id, northHub.Id })
+        {
+            if (!await dbContext.UserVenueAssignments.AnyAsync(x => x.UserId == venueManagerUser.Id && x.VenueId == venueId))
+            {
+                dbContext.UserVenueAssignments.Add(new UserVenueAssignment
+                {
+                    UserId = venueManagerUser.Id,
+                    VenueId = venueId
+                });
+            }
+        }
+
         var siteModeratorUser = await userManager.FindByEmailAsync(SiteModeratorEmail);
         if (siteModeratorUser is null)
         {
@@ -435,7 +465,7 @@ public static class DbInitializer
                 UserName = SiteModeratorEmail,
                 Email = SiteModeratorEmail,
                 EmailConfirmed = true,
-                FullName = "Site Moderator"
+                FullName = "Kristina Ivanova"
             };
 
             var siteModeratorResult = await userManager.CreateAsync(siteModeratorUser, SiteModeratorPassword);
@@ -443,6 +473,12 @@ public static class DbInitializer
             {
                 throw new InvalidOperationException("Failed to create seeded site moderator user.");
             }
+        }
+
+        if (siteModeratorUser.FullName != "Kristina Ivanova")
+        {
+            siteModeratorUser.FullName = "Kristina Ivanova";
+            await userManager.UpdateAsync(siteModeratorUser);
         }
 
         if (!await userManager.IsInRoleAsync(siteModeratorUser, SiteModeratorRole))
@@ -463,7 +499,7 @@ public static class DbInitializer
                 UserName = DemoBuyerEmail,
                 Email = DemoBuyerEmail,
                 EmailConfirmed = true,
-                FullName = "Demo Buyer"
+                FullName = "Georgi Stoyanov"
             };
 
             var buyerResult = await userManager.CreateAsync(demoBuyer, DemoBuyerPassword);
@@ -471,6 +507,12 @@ public static class DbInitializer
             {
                 throw new InvalidOperationException("Failed to create seeded buyer user.");
             }
+        }
+
+        if (demoBuyer.FullName != "Georgi Stoyanov")
+        {
+            demoBuyer.FullName = "Georgi Stoyanov";
+            await userManager.UpdateAsync(demoBuyer);
         }
 
         if (!await userManager.IsInRoleAsync(demoBuyer, BuyerRole))
@@ -486,7 +528,7 @@ public static class DbInitializer
                 UserName = DemoReviewerEmail,
                 Email = DemoReviewerEmail,
                 EmailConfirmed = true,
-                FullName = "Demo Reviewer"
+                FullName = "Tanya Vasileva"
             };
 
             var reviewerResult = await userManager.CreateAsync(demoReviewer, DemoReviewerPassword);
@@ -494,6 +536,12 @@ public static class DbInitializer
             {
                 throw new InvalidOperationException("Failed to create seeded reviewer user.");
             }
+        }
+
+        if (demoReviewer.FullName != "Tanya Vasileva")
+        {
+            demoReviewer.FullName = "Tanya Vasileva";
+            await userManager.UpdateAsync(demoReviewer);
         }
 
         if (!await userManager.IsInRoleAsync(demoReviewer, BuyerRole))
@@ -569,6 +617,7 @@ public static class DbInitializer
                 UserId = demoBuyer.Id,
                 Rating = 5,
                 Comment = "Great discussions, useful examples, and a much stronger sense of how design systems can stay maintainable across teams.",
+                ModerationStatus = ReviewModerationStatuses.Approved,
                 CreatedOnUtc = pastFrontendEvent.StartsAtUtc.AddDays(1)
             });
         }
@@ -581,6 +630,7 @@ public static class DbInitializer
                 UserId = adminUser.Id,
                 Rating = 4,
                 Comment = "Well organized and practical, especially for smaller teams planning community events with limited time and resources.",
+                ModerationStatus = ReviewModerationStatuses.Approved,
                 CreatedOnUtc = pastCommunityEvent.StartsAtUtc.AddDays(1)
             });
         }
@@ -593,6 +643,7 @@ public static class DbInitializer
                 UserId = demoReviewer.Id,
                 Rating = 5,
                 Comment = "Clear examples, thoughtful feedback, and a very practical discussion about keeping design systems usable across real product work.",
+                ModerationStatus = ReviewModerationStatuses.Approved,
                 CreatedOnUtc = pastDesignEvent.StartsAtUtc.AddDays(1)
             });
         }
@@ -605,6 +656,7 @@ public static class DbInitializer
                 UserId = demoBuyer.Id,
                 Rating = 4,
                 Comment = "Useful session with realistic campaign advice and good examples for smaller teams that need simple reporting.",
+                ModerationStatus = ReviewModerationStatuses.Approved,
                 CreatedOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(1)
             });
         }
@@ -617,6 +669,7 @@ public static class DbInitializer
                 UserId = demoReviewer.Id,
                 Rating = 5,
                 Comment = "Strong speaker lineup and a practical pace throughout. The conversion and messaging sections were especially helpful.",
+                ModerationStatus = ReviewModerationStatuses.Approved,
                 CreatedOnUtc = pastMarketingEvent.StartsAtUtc.AddDays(2)
             });
         }
@@ -624,7 +677,7 @@ public static class DbInitializer
         await dbContext.SaveChangesAsync();
     }
 
-    private static async Task<bool> RegistrationPurchaseColumnsExistAsync(ApplicationDbContext dbContext)
+    private static async Task<bool> DatabaseSchemaIsCompatibleAsync(ApplicationDbContext dbContext)
     {
         await using var connection = dbContext.Database.GetDbConnection();
         if (connection.State != System.Data.ConnectionState.Open)
@@ -634,13 +687,15 @@ public static class DbInitializer
 
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT COUNT(*)
+            SELECT
+                SUM(CASE WHEN TABLE_NAME = 'Registrations' AND COLUMN_NAME IN ('AmountPaid', 'CardLast4', 'CardholderName', 'PaymentStatus', 'RefundedOnUtc') THEN 1 ELSE 0 END) +
+                SUM(CASE WHEN TABLE_NAME = 'Reviews' AND COLUMN_NAME IN ('ModerationStatus', 'ModeratedOnUtc', 'ModeratedByUserId') THEN 1 ELSE 0 END) +
+                SUM(CASE WHEN TABLE_NAME = 'UserVenueAssignments' AND COLUMN_NAME IN ('Id', 'UserId', 'VenueId', 'AssignedOnUtc') THEN 1 ELSE 0 END) +
+                SUM(CASE WHEN TABLE_NAME = 'AuditLogs' AND COLUMN_NAME IN ('Id', 'EntityType', 'ActionType', 'EntityId', 'PerformedByUserId', 'PerformedByName', 'Summary', 'CreatedOnUtc') THEN 1 ELSE 0 END)
             FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'Registrations'
-              AND COLUMN_NAME IN ('AmountPaid', 'CardLast4', 'CardholderName', 'PaymentStatus', 'RefundedOnUtc')
             """;
 
         var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result) == 5;
+        return Convert.ToInt32(result) == 20;
     }
 }

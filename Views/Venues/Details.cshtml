@@ -13,6 +13,14 @@
                 <div class="detail-grid">
                     <div><strong>Address</strong><span>@Model.Address</span></div>
                     <div><strong>Capacity</strong><span>@Model.Capacity attendees</span></div>
+                    <div>
+                        <strong>Venue rating</strong>
+                        <span>
+                            @(Model.ReviewCount == 0
+                                ? "No ratings yet"
+                                : $"{Model.AverageRating:F1}/5 from {Model.ReviewCount} review{(Model.ReviewCount == 1 ? string.Empty : "s")}")
+                        </span>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-8">

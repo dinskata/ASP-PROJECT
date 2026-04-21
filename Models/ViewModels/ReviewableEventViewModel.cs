@@ -11,4 +11,5 @@ public class ReviewableEventViewModel
     public bool HasExistingReview { get; init; }
     public string ExistingComment { get; init; } = string.Empty;
     public int ExistingRating { get; init; }
+    public string ModerationStatus { get; init; } = string.Empty;
 }

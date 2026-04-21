@@ -1,0 +1,25 @@
+@model ASP_PROJECT.Models.ViewModels.ModeratorDashboardViewModel
+@{
+    ViewData["Title"] = "Moderator Panel";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Moderation</span>
+                <h1>Moderator dashboard</h1>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-primary" asp-area="Moderator" asp-controller="VenueManagers" asp-action="Index">Venue Assignments</a>
+                <a class="btn btn-primary" asp-area="Moderator" asp-controller="Reviews" asp-action="Index">Review Queue</a>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-4"><div class="feature-card"><h5>Pending Reviews</h5><p>@Model.PendingReviewsCount review(s) waiting for a decision.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Approved Reviews</h5><p>@Model.ApprovedReviewsCount approved review(s) on the platform.</p></div></div>
+            <div class="col-md-4"><div class="feature-card"><h5>Venue Managers</h5><p>@Model.VenueManagersCount manager account(s) with venue access.</p></div></div>
+        </div>
+        <partial name="~/Areas/Moderator/Views/Shared/_ReviewModerationTable.cshtml" model="Model.RecentReviews" />
+    </div>
+</section>

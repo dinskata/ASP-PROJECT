@@ -13,4 +13,5 @@ public class ApplicationUser : IdentityUser
 
     public ICollection<Registration> Registrations { get; set; } = new List<Registration>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<UserVenueAssignment> VenueAssignments { get; set; } = new List<UserVenueAssignment>();
 }

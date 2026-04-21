@@ -1,4 +1,4 @@
-@model ASP_PROJECT.Models.ViewModels.EventListViewModel
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.ManagementEventListItemViewModel>
 @{
     ViewData["Title"] = "Manage Events";
 }
@@ -12,6 +12,16 @@
             </div>
             <a class="btn btn-primary" asp-action="Create">Create new</a>
         </div>
+        <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+            <div class="row g-3">
+                <div class="col-md-10">
+                    <input name="searchTerm" value="@Context.Request.Query["searchTerm"]" class="form-control" placeholder="Search by title, category, or venue" />
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Search</button>
+                </div>
+            </div>
+        </form>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
@@ -22,17 +32,23 @@
                                 <th>Category</th>
                                 <th>Date</th>
                                 <th>Venue</th>
+                                <th>Status</th>
+                                <th>Tickets Sold</th>
+                                <th>Reviews</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in Model.Result.Items)
+                            @foreach (var item in Model)
                             {
                                 <tr>
                                     <td>@item.Title</td>
                                     <td>@item.Category</td>
                                     <td>@item.StartsAtUtc.ToLocalTime().ToString("g")</td>
                                     <td>@item.Venue</td>
+                                    <td>@(item.IsPublished ? "Published" : "Draft")</td>
+                                    <td>@item.TicketsSold</td>
+                                    <td>@item.ReviewCount</td>
                                     <td><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a></td>
                                 </tr>
                             }
