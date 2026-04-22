@@ -13,6 +13,7 @@ public class PaymentManagementItemViewModel
     public decimal AmountPaid { get; init; }
     public string PaymentStatus { get; init; } = string.Empty;
     public string CardLast4 { get; init; } = string.Empty;
+    public string PrimaryTicketCode { get; init; } = string.Empty;
     public DateTime RegisteredOnUtc { get; init; }
     public DateTime? RefundedOnUtc { get; init; }
     public bool CanForceRefund { get; init; }

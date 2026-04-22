@@ -73,6 +73,7 @@
                                 <th>Seat</th>
                                 <th>Note</th>
                                 <th>Status</th>
+                                <th>Check-in</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -90,6 +91,21 @@
                                     <td>@ticket.SeatLabel</td>
                                     <td>@(string.IsNullOrWhiteSpace(ticket.TicketNote) ? "-" : ticket.TicketNote)</td>
                                     <td>@ticket.PaymentStatus</td>
+                                    <td>
+                                        @if (ticket.IsCheckedIn)
+                                        {
+                                            <span class="text-success fw-semibold">Checked</span>
+                                            <div class="small text-secondary">@ticket.CheckedInOnUtc?.ToLocalTime().ToString("g")</div>
+                                            @if (!string.IsNullOrWhiteSpace(ticket.CheckedInByName))
+                                            {
+                                                <div class="small text-secondary">@ticket.CheckedInByName</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">Not checked</span>
+                                        }
+                                    </td>
                                     <td>
                                         @if (ticket.CanEdit)
                                         {

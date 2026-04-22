@@ -1,17 +1,24 @@
 @model ASP_PROJECT.Models.ViewModels.EventEditViewModel
 
-<div class="row g-4">
-    <div class="col-md-6">
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+<div class="editor-intro mb-4">
+    <h2 class="h5 mb-2">Event details</h2>
+    <p class="text-secondary mb-0">Set the event basics, choose the venue, and pick a start time that fits your schedule.</p>
+</div>
+
+<div class="row g-4 editor-grid">
+    <div class="col-lg-7">
         <label asp-for="Title" class="form-label"></label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
-    <div class="col-md-3">
+    <div class="col-lg-3 col-md-6">
         <label asp-for="CategoryId" class="form-label"></label>
         <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))"></select>
         <span asp-validation-for="CategoryId" class="text-danger"></span>
     </div>
-    <div class="col-md-3">
+    <div class="col-lg-2 col-md-6">
         <label asp-for="VenueId" class="form-label"></label>
         <select asp-for="VenueId" class="form-select" asp-items="@(new SelectList(Model.Venues, "Id", "Name"))"></select>
         <span asp-validation-for="VenueId" class="text-danger"></span>
@@ -21,28 +28,28 @@
         <textarea asp-for="Description" class="form-control" rows="6"></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
-    <div class="col-md-4">
+    <div class="col-lg-5 col-md-6">
         <label asp-for="StartsAtUtc" class="form-label"></label>
         <input asp-for="StartsAtUtc" class="form-control" type="datetime-local" />
         <span asp-validation-for="StartsAtUtc" class="text-danger"></span>
     </div>
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-6">
         <label asp-for="DurationMinutes" class="form-label"></label>
         <input asp-for="DurationMinutes" class="form-control" />
         <span asp-validation-for="DurationMinutes" class="text-danger"></span>
     </div>
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4">
         <label asp-for="Price" class="form-label"></label>
         <input asp-for="Price" class="form-control" />
         <span asp-validation-for="Price" class="text-danger"></span>
     </div>
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4">
         <label asp-for="SeatsAvailable" class="form-label"></label>
         <input asp-for="SeatsAvailable" class="form-control" />
         <span asp-validation-for="SeatsAvailable" class="text-danger"></span>
     </div>
-    <div class="col-md-2 d-flex align-items-center">
-        <div class="form-check mt-4">
+    <div class="col-lg-1 col-md-4 d-flex align-items-end">
+        <div class="form-check editor-toggle">
             <input asp-for="IsPublished" class="form-check-input" />
             <label asp-for="IsPublished" class="form-check-label"></label>
         </div>

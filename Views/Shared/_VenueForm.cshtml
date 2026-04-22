@@ -1,0 +1,36 @@
+@model ASP_PROJECT.Models.ViewModels.VenueEditViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+<div class="editor-intro mb-4">
+    <h2 class="h5 mb-2">Venue details</h2>
+    <p class="text-secondary mb-0">Keep the venue details clear so managers and attendees can understand the location, capacity, and atmosphere at a glance.</p>
+</div>
+
+<div class="row g-4 editor-grid">
+    <div class="col-lg-7">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="col-lg-5">
+        <label asp-for="City" class="form-label"></label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div class="col-lg-3 col-md-4">
+        <label asp-for="Capacity" class="form-label"></label>
+        <input asp-for="Capacity" class="form-control" />
+        <span asp-validation-for="Capacity" class="text-danger"></span>
+    </div>
+    <div class="col-lg-9 col-md-8">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+</div>

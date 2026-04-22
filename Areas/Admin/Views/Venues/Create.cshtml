@@ -5,39 +5,16 @@
 
 <section class="section-space">
     <div class="container narrow-content">
-        <h1>Create venue</h1>
-        <form method="post" class="card border-0 shadow-sm p-4">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-
-            <div class="vstack gap-3">
-                <div>
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-                <div>
-                    <label asp-for="City" class="form-label"></label>
-                    <input asp-for="City" class="form-control" />
-                    <span asp-validation-for="City" class="text-danger"></span>
-                </div>
-                <div>
-                    <label asp-for="Address" class="form-label"></label>
-                    <input asp-for="Address" class="form-control" />
-                    <span asp-validation-for="Address" class="text-danger"></span>
-                </div>
-                <div>
-                    <label asp-for="Capacity" class="form-label"></label>
-                    <input asp-for="Capacity" class="form-control" />
-                    <span asp-validation-for="Capacity" class="text-danger"></span>
-                </div>
-                <div>
-                    <label asp-for="Description" class="form-label"></label>
-                    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
+        <div class="section-heading mb-4">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Create venue</h1>
+                <p class="text-secondary mb-0">Add a new venue profile with enough detail for both managers and attendees.</p>
             </div>
-
+        </div>
+        <form method="post" class="card border-0 shadow-sm editor-card p-4">
+            @Html.AntiForgeryToken()
+            <partial name="~/Views/Shared/_VenueForm.cshtml" model="Model" />
             <div class="d-flex gap-3 mt-4">
                 <button class="btn btn-primary">Create</button>
                 <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>

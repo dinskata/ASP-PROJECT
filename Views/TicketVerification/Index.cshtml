@@ -94,10 +94,10 @@
                     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
                         <div>
                             <span class="section-label">Verification result</span>
-                            <h2 class="h4 mb-0">@(Model.Result.IsValid ? "Ticket accepted" : "Ticket not valid")</h2>
+                            <h2 class="h4 mb-0">@(Model.Result.IsValid ? "Ticket accepted" : Model.Result.IsCheckedIn ? "Ticket already checked in" : "Ticket not valid")</h2>
                         </div>
-                        <span class="badge @(Model.Result.IsValid ? "text-bg-success" : "text-bg-danger")">
-                            @(Model.Result.IsValid ? "Valid" : "Rejected")
+                        <span class="badge @(Model.Result.IsValid ? "text-bg-success" : Model.Result.IsCheckedIn ? "text-bg-warning" : "text-bg-danger")">
+                            @(Model.Result.IsValid ? "Valid" : Model.Result.IsCheckedIn ? "Used" : "Rejected")
                         </span>
                     </div>
                     <p class="text-secondary">@Model.Result.Message</p>
@@ -111,10 +111,148 @@
                         <div><strong>Seat</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.SeatLabel) ? "-" : Model.Result.SeatLabel)</span></div>
                         <div><strong>Status</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.PaymentStatus) ? "-" : Model.Result.PaymentStatus)</span></div>
                         <div><strong>Starts</strong><span>@(Model.Result.StartsAtUtc?.ToLocalTime().ToString("f") ?? "-")</span></div>
+                        <div><strong>Checked in</strong><span>@(Model.Result.IsCheckedIn ? "Yes" : "No")</span></div>
+                        <div><strong>Checked by</strong><span>@(string.IsNullOrWhiteSpace(Model.Result.CheckedInByName) ? "-" : Model.Result.CheckedInByName)</span></div>
+                        <div><strong>Checked on</strong><span>@(Model.Result.CheckedInOnUtc?.ToLocalTime().ToString("f") ?? "-")</span></div>
                     </div>
+
+                    @if (Model.Result.CanMarkCheckedIn)
+                    {
+                        <form method="post" asp-action="CheckIn" class="mt-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ticketCode" value="@Model.Result.TicketCode" />
+                            <button class="btn btn-success">Mark ticket as checked</button>
+                        </form>
+                    }
                 </div>
             </div>
         }
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                    <div>
+                        <span class="section-label">Ticket list</span>
+                        <h2 class="h4 mb-0">Recent accessible tickets</h2>
+                    </div>
+                    <p class="text-secondary small mb-0">Managers and venue staff only see tickets for their assigned venues. Moderators and admins see the wider list.</p>
+                </div>
+
+                @if (!Model.RecentTickets.Any())
+                {
+                    <div class="empty-state py-4">
+                        <h3>No tickets available</h3>
+                        <p>There are no active tickets in the venues this account can access right now.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Buyer</th>
+                                    <th>Event</th>
+                                    <th>Venue</th>
+                                    <th>Seat</th>
+                                    <th>Status</th>
+                                    <th>Check-in</th>
+                                    <th>Starts</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ticket in Model.RecentTickets)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@ticket.TicketCode</div>
+                                            <div class="small text-secondary">@ticket.VerificationCode</div>
+                                        </td>
+                                        <td>@ticket.BuyerName</td>
+                                        <td>@ticket.EventTitle</td>
+                                        <td>@ticket.VenueName</td>
+                                        <td>@ticket.SeatLabel</td>
+                                        <td>@ticket.PaymentStatus</td>
+                                        <td>
+                                            @if (ticket.IsCheckedIn)
+                                            {
+                                                <span class="text-success fw-semibold">Checked</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary small">Open</span>
+                                            }
+                                        </td>
+                                        <td>@ticket.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                    <div>
+                        <span class="section-label">Check-in history</span>
+                        <h2 class="h4 mb-0">Recently checked tickets</h2>
+                    </div>
+                    <p class="text-secondary small mb-0">This history follows the same venue access rules as the verifier itself.</p>
+                </div>
+
+                @{
+                    var checkedTickets = Model.RecentTickets
+                        .Where(x => x.IsCheckedIn)
+                        .OrderByDescending(x => x.CheckedInOnUtc)
+                        .ToList();
+                }
+
+                @if (!checkedTickets.Any())
+                {
+                    <div class="empty-state py-4">
+                        <h3>No checked tickets yet</h3>
+                        <p>Checked-in tickets will appear here after staff or managers admit attendees.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Buyer</th>
+                                    <th>Event</th>
+                                    <th>Seat</th>
+                                    <th>Checked by</th>
+                                    <th>Checked on</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ticket in checkedTickets)
+                                {
+                                    <tr>
+                                        <td>@ticket.TicketCode</td>
+                                        <td>@ticket.BuyerName</td>
+                                        <td>
+                                            <div>@ticket.EventTitle</div>
+                                            <small class="text-secondary">@ticket.VenueName</small>
+                                        </td>
+                                        <td>@ticket.SeatLabel</td>
+                                        <td>@(string.IsNullOrWhiteSpace(ticket.CheckedInByName) ? "-" : ticket.CheckedInByName)</td>
+                                        <td>@(ticket.CheckedInOnUtc?.ToLocalTime().ToString("g") ?? "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </section>
 

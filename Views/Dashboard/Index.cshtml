@@ -305,6 +305,9 @@
                 const verificationCode = ticketInfo?.VerificationCode || getVerificationCode(payload.registrationId, payload.eventId, payload.startsAt, ticketIndex);
                 const seatLabel = ticketInfo?.SeatLabel || `Hall ${((payload.registrationId + ticketIndex) % 5) + 1} / Seat ${((payload.registrationId * 13) + ((ticketIndex + 1) * 7)) % 80 + 1}`;
                 const ticketNote = ticketInfo?.TicketNote || '';
+                const isCheckedIn = Boolean(ticketInfo?.IsCheckedIn);
+                const checkedInOn = ticketInfo?.CheckedInOnUtc ? formatDisplayDate(ticketInfo.CheckedInOnUtc) : '';
+                const checkedInBy = ticketInfo?.CheckedInByName || '';
                 const qrMarkup = createTestQrSvg(`${ticketNumber}-${verificationCode}-${payload.startsAt}`);
 
                 return `
@@ -313,6 +316,7 @@
                             <div>
                                 <span class="ticket-chip">Ticket ${ticketIndex + 1}</span>
                                 <h3>${escapeHtml(payload.eventTitle)}</h3>
+                                ${isCheckedIn ? `<div class="ticket-check-status"><span class="ticket-check-mark">✓</span> Checked in${checkedInOn ? ` on ${escapeHtml(checkedInOn)}` : ''}${checkedInBy ? ` by ${escapeHtml(checkedInBy)}` : ''}</div>` : ''}
                             </div>
                             <div class="ticket-code-block">
                                 <span>Ticket code</span>

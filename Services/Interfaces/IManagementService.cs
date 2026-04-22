@@ -18,6 +18,7 @@ public interface IManagementService
     Task<IReadOnlyCollection<AuditLogListItemViewModel>> GetAuditLogsAsync(string? searchTerm = null, string? entityFilter = null, string? sortBy = null, int take = 100);
     Task<IReadOnlyCollection<TicketRegistryItemViewModel>> GetTicketRegistryAsync(string? searchTerm = null, string? statusFilter = null, string? sortBy = null, int take = 250, IReadOnlyCollection<int>? allowedVenueIds = null);
     Task<TicketVerificationResultViewModel?> VerifyTicketAsync(string? ticketCode, string? verificationCode, IReadOnlyCollection<int>? allowedVenueIds = null, bool hasGlobalAccess = false);
+    Task<TicketVerificationResultViewModel?> MarkTicketCheckedInAsync(string? ticketCode, IReadOnlyCollection<int>? allowedVenueIds, bool hasGlobalAccess, string? actorId, string actorName);
     Task<AdminUserDetailsViewModel?> GetUserDetailsAsync(string userId);
     Task<AdminTicketEditViewModel?> BuildTicketEditorAsync(int ticketId);
     Task<bool> UpdateTicketAsync(AdminTicketEditViewModel model, string actorId, string actorName);

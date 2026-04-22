@@ -13,4 +13,7 @@ public class TicketRegistryItemViewModel
     public string PaymentStatus { get; init; } = string.Empty;
     public DateTime StartsAtUtc { get; init; }
     public DateTime RegisteredOnUtc { get; init; }
+    public bool IsCheckedIn { get; init; }
+    public DateTime? CheckedInOnUtc { get; init; }
+    public string CheckedInByName { get; init; } = string.Empty;
 }

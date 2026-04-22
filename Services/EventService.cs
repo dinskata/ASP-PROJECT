@@ -487,7 +487,10 @@ public class EventService : IEventService
                         TicketCode = t.TicketCode,
                         VerificationCode = t.VerificationCode,
                         SeatLabel = t.SeatLabel,
-                        TicketNote = t.TicketNote
+                        TicketNote = t.TicketNote,
+                        IsCheckedIn = t.IsCheckedIn,
+                        CheckedInOnUtc = t.CheckedInOnUtc,
+                        CheckedInByName = t.CheckedInByName
                     })
                     .ToList()
             })

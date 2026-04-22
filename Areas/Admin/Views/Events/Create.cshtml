@@ -5,8 +5,14 @@
 
 <section class="section-space">
     <div class="container narrow-content">
-        <h1>Create event</h1>
-        <form method="post" class="card border-0 shadow-sm p-4">
+        <div class="section-heading mb-4">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Create event</h1>
+                <p class="text-secondary mb-0">Build a new event and publish it when the details are ready.</p>
+            </div>
+        </div>
+        <form method="post" class="card border-0 shadow-sm editor-card p-4">
             @Html.AntiForgeryToken()
             <partial name="~/Views/Shared/_EventForm.cshtml" model="Model" />
             <div class="d-flex gap-3 mt-4">

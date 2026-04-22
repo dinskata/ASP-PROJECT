@@ -27,5 +27,12 @@ public class RegistrationTicket
     [StringLength(180)]
     public string TicketNote { get; set; } = string.Empty;
 
+    public bool IsCheckedIn { get; set; }
+
+    public DateTime? CheckedInOnUtc { get; set; }
+
+    [StringLength(160)]
+    public string CheckedInByName { get; set; } = string.Empty;
+
     public DateTime IssuedOnUtc { get; set; } = DateTime.UtcNow;
 }

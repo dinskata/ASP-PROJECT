@@ -13,4 +13,7 @@ public class AdminUserTicketViewModel
     public string TicketNote { get; init; } = string.Empty;
     public string PaymentStatus { get; init; } = string.Empty;
     public bool CanEdit { get; init; }
+    public bool IsCheckedIn { get; init; }
+    public DateTime? CheckedInOnUtc { get; init; }
+    public string CheckedInByName { get; init; } = string.Empty;
 }

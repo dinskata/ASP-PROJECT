@@ -36,6 +36,20 @@ public class TicketVerificationController : Controller
         return View(await BuildPageModelAsync(model.TicketCode, model.VerificationCode, result));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CheckIn(string ticketCode)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var hasGlobalAccess = User.IsInRole(DbInitializer.SiteModeratorRole) || User.IsInRole(DbInitializer.AdministratorRole);
+        var allowedVenueIds = hasGlobalAccess || string.IsNullOrWhiteSpace(userId)
+            ? null
+            : await _managementService.GetAssignedVenueIdsAsync(userId);
+
+        var result = await _managementService.MarkTicketCheckedInAsync(ticketCode, allowedVenueIds, hasGlobalAccess, userId, GetActorName());
+        return View("Index", await BuildPageModelAsync(ticketCode, result?.VerificationCode, result));
+    }
+
     private async Task<TicketVerificationPageViewModel> BuildPageModelAsync(
         string? ticketCode = null,
         string? verificationCode = null,
@@ -52,7 +66,11 @@ public class TicketVerificationController : Controller
             TicketCode = ticketCode ?? string.Empty,
             VerificationCode = verificationCode ?? string.Empty,
             Result = result,
-            DemoTickets = await _managementService.GetTicketRegistryAsync(sortBy: "newest", take: 8, allowedVenueIds: allowedVenueIds)
+            DemoTickets = await _managementService.GetTicketRegistryAsync(sortBy: "newest", take: 8, allowedVenueIds: allowedVenueIds),
+            RecentTickets = await _managementService.GetTicketRegistryAsync(sortBy: "newest", take: 40, allowedVenueIds: allowedVenueIds)
         };
     }
+
+    private string GetActorName()
+        => User.Identity?.Name ?? "Ticket verifier";
 }

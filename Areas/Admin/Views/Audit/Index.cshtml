@@ -94,7 +94,8 @@
                         <option value="buyer" selected="@(ViewBag.TicketSortBy == "buyer")">Buyer</option>
                         <option value="code" selected="@(ViewBag.TicketSortBy == "code")">Ticket code</option>
                         <option value="status" selected="@(ViewBag.TicketSortBy == "status")">Status</option>
-                    </select>
+                        <option value="checked_desc" selected="@(ViewBag.TicketSortBy == "checked_desc")">Checked first</option>
+                        </select>
                 </div>
                 <div class="col-md-2 d-grid">
                     <button class="btn btn-primary">Filter tickets</button>
@@ -114,6 +115,7 @@
                                 <th>Buyer</th>
                                 <th>Seat</th>
                                 <th>Status</th>
+                                <th>Check-in</th>
                                 <th>Starts</th>
                             </tr>
                         </thead>
@@ -130,6 +132,21 @@
                                     <td>@ticket.BuyerName</td>
                                     <td>@ticket.SeatLabel</td>
                                     <td>@ticket.PaymentStatus</td>
+                                    <td>
+                                        @if (ticket.IsCheckedIn)
+                                        {
+                                            <span class="text-success fw-semibold">Checked</span>
+                                            <div class="small text-secondary">@ticket.CheckedInOnUtc?.ToLocalTime().ToString("g")</div>
+                                            @if (!string.IsNullOrWhiteSpace(ticket.CheckedInByName))
+                                            {
+                                                <div class="small text-secondary">@ticket.CheckedInByName</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">Not checked</span>
+                                        }
+                                    </td>
                                     <td>@ticket.StartsAtUtc.ToLocalTime().ToString("g")</td>
                                 </tr>
                             }

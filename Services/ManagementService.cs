@@ -169,6 +169,10 @@ public class ManagementService : IManagementService
                 AmountPaid = x.AmountPaid,
                 PaymentStatus = x.PaymentStatus,
                 CardLast4 = x.CardLast4,
+                PrimaryTicketCode = x.RegistrationTickets
+                    .OrderBy(t => t.TicketNumber)
+                    .Select(t => t.TicketCode)
+                    .FirstOrDefault() ?? string.Empty,
                 RegisteredOnUtc = x.RegisteredOnUtc,
                 RefundedOnUtc = x.RefundedOnUtc,
                 CanForceRefund = x.PaymentStatus == "Paid"
@@ -197,6 +201,10 @@ public class ManagementService : IManagementService
                 PaymentStatus = x.Registration.PaymentStatus,
                 CanEdit = x.Registration.PaymentStatus == "Paid"
                     && x.Registration.Event.StartsAtUtc.AddMinutes(x.Registration.Event.DurationMinutes) > now
+                    && !x.IsCheckedIn,
+                IsCheckedIn = x.IsCheckedIn,
+                CheckedInOnUtc = x.CheckedInOnUtc,
+                CheckedInByName = x.CheckedInByName
             })
             .ToListAsync();
 
@@ -460,7 +468,11 @@ public class ManagementService : IManagementService
                 x.Event!.Title.ToLower().Contains(normalized) ||
                 x.Event.Venue!.Name.ToLower().Contains(normalized) ||
                 x.User!.FullName.ToLower().Contains(normalized) ||
-                x.CardLast4.ToLower().Contains(normalized));
+                x.CardLast4.ToLower().Contains(normalized) ||
+                x.RegistrationTickets.Any(t =>
+                    t.TicketCode.ToLower().Contains(normalized) ||
+                    t.VerificationCode.ToLower().Contains(normalized) ||
+                    t.SeatLabel.ToLower().Contains(normalized)));
         }
 
         query = (sortBy ?? "newest").ToLowerInvariant() switch
@@ -487,6 +499,10 @@ public class ManagementService : IManagementService
                 AmountPaid = x.AmountPaid,
                 PaymentStatus = x.PaymentStatus,
                 CardLast4 = x.CardLast4,
+                PrimaryTicketCode = x.RegistrationTickets
+                    .OrderBy(t => t.TicketNumber)
+                    .Select(t => t.TicketCode)
+                    .FirstOrDefault() ?? string.Empty,
                 RegisteredOnUtc = x.RegisteredOnUtc,
                 RefundedOnUtc = x.RefundedOnUtc,
                 CanForceRefund = x.PaymentStatus == "Paid"
@@ -592,7 +608,10 @@ public class ManagementService : IManagementService
                 SeatLabel = x.SeatLabel,
                 PaymentStatus = x.Registration.PaymentStatus,
                 StartsAtUtc = x.Registration.Event.StartsAtUtc,
-                RegisteredOnUtc = x.Registration.RegisteredOnUtc
+                RegisteredOnUtc = x.Registration.RegisteredOnUtc,
+                IsCheckedIn = x.IsCheckedIn,
+                CheckedInOnUtc = x.CheckedInOnUtc,
+                CheckedInByName = x.CheckedInByName
             })
             .ToListAsync();
 
@@ -609,7 +628,9 @@ public class ManagementService : IManagementService
                 x.VerificationCode.ToLowerInvariant().Contains(normalized) ||
                 x.EventTitle.ToLowerInvariant().Contains(normalized) ||
                 x.BuyerName.ToLowerInvariant().Contains(normalized) ||
-                x.VenueName.ToLowerInvariant().Contains(normalized))
+                x.VenueName.ToLowerInvariant().Contains(normalized) ||
+                x.SeatLabel.ToLowerInvariant().Contains(normalized) ||
+                x.CheckedInByName.ToLowerInvariant().Contains(normalized))
                 .ToList();
         }
 
@@ -620,6 +641,8 @@ public class ManagementService : IManagementService
             "code" => tickets.OrderBy(x => x.TicketCode).ToList(),
             "start" => tickets.OrderBy(x => x.StartsAtUtc).ToList(),
             "status" => tickets.OrderBy(x => x.PaymentStatus).ThenByDescending(x => x.RegisteredOnUtc).ToList(),
+            "checked_desc" => tickets.OrderByDescending(x => x.IsCheckedIn).ThenByDescending(x => x.CheckedInOnUtc ?? DateTime.MinValue).ToList(),
+            "checked_asc" => tickets.OrderBy(x => x.IsCheckedIn).ThenBy(x => x.CheckedInOnUtc ?? DateTime.MaxValue).ToList(),
             _ => tickets.OrderByDescending(x => x.RegisteredOnUtc).ToList()
         };
 
@@ -678,9 +701,11 @@ public class ManagementService : IManagementService
 
         var paymentStatus = ticket.Registration.PaymentStatus;
         var hasEnded = ticket.Registration.Event.StartsAtUtc.AddMinutes(ticket.Registration.Event.DurationMinutes) <= DateTime.UtcNow;
+        var verificationMatches = string.Equals(ticket.VerificationCode, normalizedVerificationCode, StringComparison.OrdinalIgnoreCase);
         var isValid = string.Equals(ticket.VerificationCode, normalizedVerificationCode, StringComparison.OrdinalIgnoreCase)
             && string.Equals(paymentStatus, "Paid", StringComparison.OrdinalIgnoreCase)
-            && !hasEnded;
+            && !hasEnded
+            && !ticket.IsCheckedIn;
 
         return new TicketVerificationResultViewModel
         {
@@ -694,14 +719,85 @@ public class ManagementService : IManagementService
             SeatLabel = ticket.SeatLabel,
             PaymentStatus = paymentStatus,
             StartsAtUtc = ticket.Registration.Event.StartsAtUtc,
-            Message = !string.Equals(ticket.VerificationCode, normalizedVerificationCode, StringComparison.OrdinalIgnoreCase)
+            IsCheckedIn = ticket.IsCheckedIn,
+            CheckedInOnUtc = ticket.CheckedInOnUtc,
+            CheckedInByName = ticket.CheckedInByName,
+            CanMarkCheckedIn = verificationMatches
+                && string.Equals(paymentStatus, "Paid", StringComparison.OrdinalIgnoreCase)
+                && !hasEnded
+                && !ticket.IsCheckedIn,
+            Message = !verificationMatches
                 ? "Verification code does not match this ticket."
                 : string.Equals(paymentStatus, "Refunded", StringComparison.OrdinalIgnoreCase)
                     ? "Ticket has been refunded and is no longer valid."
                     : hasEnded
                         ? "Event has already ended, so this ticket is expired."
-                        : "Ticket is valid for entry."
+                        : ticket.IsCheckedIn
+                            ? $"Ticket has already been checked in{(string.IsNullOrWhiteSpace(ticket.CheckedInByName) ? string.Empty : $" by {ticket.CheckedInByName}")}."
+                            : "Ticket is valid for entry."
         };
+    }
+
+    public async Task<TicketVerificationResultViewModel?> MarkTicketCheckedInAsync(string? ticketCode, IReadOnlyCollection<int>? allowedVenueIds, bool hasGlobalAccess, string? actorId, string actorName)
+    {
+        var normalizedTicketCode = ticketCode?.Trim().ToUpperInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalizedTicketCode))
+        {
+            return new TicketVerificationResultViewModel
+            {
+                IsSubmitted = true,
+                IsValid = false,
+                TicketCode = normalizedTicketCode,
+                Message = "Ticket code is required."
+            };
+        }
+
+        var ticket = await _dbContext.RegistrationTickets
+            .Include(x => x.Registration)
+                .ThenInclude(x => x!.Event)
+                    .ThenInclude(x => x!.Venue)
+            .Include(x => x.Registration)
+                .ThenInclude(x => x!.User)
+            .SingleOrDefaultAsync(x => x.TicketCode == normalizedTicketCode);
+
+        if (ticket is null || ticket.Registration is null || ticket.Registration.Event is null)
+        {
+            return new TicketVerificationResultViewModel
+            {
+                IsSubmitted = true,
+                IsValid = false,
+                TicketCode = normalizedTicketCode,
+                Message = "Ticket was not found."
+            };
+        }
+
+        if (!hasGlobalAccess && allowedVenueIds is not null && !allowedVenueIds.Contains(ticket.Registration.Event.VenueId))
+        {
+            return new TicketVerificationResultViewModel
+            {
+                IsSubmitted = true,
+                IsValid = false,
+                TicketCode = normalizedTicketCode,
+                VerificationCode = ticket.VerificationCode,
+                Message = "You do not have access to check in tickets for this venue."
+            };
+        }
+
+        var paymentStatus = ticket.Registration.PaymentStatus;
+        var hasEnded = ticket.Registration.Event.StartsAtUtc.AddMinutes(ticket.Registration.Event.DurationMinutes) <= DateTime.UtcNow;
+        if (!string.Equals(paymentStatus, "Paid", StringComparison.OrdinalIgnoreCase) || hasEnded || ticket.IsCheckedIn)
+        {
+            return await VerifyTicketAsync(ticket.TicketCode, ticket.VerificationCode, allowedVenueIds, hasGlobalAccess);
+        }
+
+        ticket.IsCheckedIn = true;
+        ticket.CheckedInOnUtc = DateTime.UtcNow;
+        ticket.CheckedInByName = actorName;
+
+        await _dbContext.SaveChangesAsync();
+        await LogAuditAsync("Ticket", "CheckIn", actorId, actorName, $"Checked in ticket {ticket.TicketCode} for {ticket.Registration.Event.Title}.", ticket.Id);
+
+        return await VerifyTicketAsync(ticket.TicketCode, ticket.VerificationCode, allowedVenueIds, hasGlobalAccess);
     }
 
     public async Task<AdminTicketEditViewModel?> BuildTicketEditorAsync(int ticketId)
@@ -744,7 +840,8 @@ public class ManagementService : IManagementService
         }
 
         var canEdit = ticket.Registration.PaymentStatus == "Paid"
-            && ticket.Registration.Event.StartsAtUtc.AddMinutes(ticket.Registration.Event.DurationMinutes) > DateTime.UtcNow;
+            && ticket.Registration.Event.StartsAtUtc.AddMinutes(ticket.Registration.Event.DurationMinutes) > DateTime.UtcNow
+            && !ticket.IsCheckedIn;
         if (!canEdit)
         {
             return false;
