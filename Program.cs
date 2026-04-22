@@ -8,6 +8,20 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var obfuscatedConnectionString = builder.Configuration["ConnectionStrings:ObfuscatedDefaultConnection"];
+if (string.IsNullOrWhiteSpace(connectionString) && !string.IsNullOrWhiteSpace(obfuscatedConnectionString))
+{
+    try
+    {
+        var bytes = Convert.FromBase64String(obfuscatedConnectionString);
+        connectionString = System.Text.Encoding.UTF8.GetString(bytes);
+    }
+    catch (FormatException)
+    {
+        connectionString = null;
+    }
+}
+
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     connectionString = "Server=(localdb)\\mssqllocaldb;Database=aspnet-ASP_PROJECT-65637b89-fe41-4c16-a765-7c3e79a8fe75;Trusted_Connection=True;MultipleActiveResultSets=true";
