@@ -118,7 +118,9 @@ public class IndexModel : PageModel
                 return Page();
             }
 
-            var passwordResult = await _userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+            var currentPassword = Input.OldPassword!;
+            var newPassword = Input.NewPassword!;
+            var passwordResult = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
             if (!passwordResult.Succeeded)
             {
                 foreach (var error in passwordResult.Errors)

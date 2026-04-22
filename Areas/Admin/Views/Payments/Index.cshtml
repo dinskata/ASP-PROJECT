@@ -61,7 +61,9 @@
                                 <tr>
                                     <td>@item.EventTitle</td>
                                     <td><a asp-area="Admin" asp-controller="Users" asp-action="Details" asp-route-id="@item.UserId">@item.BuyerName</a></td>
-                                    <td>@item.Tickets</td>
+                                    <td>
+                                        <a asp-area="Admin" asp-controller="Users" asp-action="RegistrationTickets" asp-route-id="@item.RegistrationId">@item.Tickets</a>
+                                    </td>
                                     <td>@(string.IsNullOrWhiteSpace(item.PrimaryTicketCode) ? "-" : item.PrimaryTicketCode)</td>
                                     <td>@(item.AmountPaid == 0 ? "Free" : $"EUR {item.AmountPaid:F2}")</td>
                                     <td>@item.PaymentStatus</td>

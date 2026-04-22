@@ -578,6 +578,10 @@ a:hover {
   max-width: 760px;
 }
 
+.editor-shell {
+  max-width: 940px;
+}
+
 .editor-card {
   border-radius: 1.5rem;
   padding: clamp(1.5rem, 3vw, 2rem) !important;
@@ -593,6 +597,15 @@ a:hover {
   min-width: 0;
 }
 
+.editor-page-heading {
+  align-items: center;
+}
+
+.editor-page-heading > div {
+  width: 100%;
+  text-align: center;
+}
+
 .editor-card .form-control,
 .editor-card .form-select {
   min-height: 3.25rem;
@@ -606,11 +619,31 @@ a:hover {
   padding-right: 0.85rem;
 }
 
+.editor-card .form-text {
+  display: block;
+  margin-top: 0.45rem;
+}
+
+.editor-publish-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(255, 250, 242, 0.88);
+  border: 1px solid rgba(214, 201, 184, 0.75);
+}
+
 .editor-toggle {
   padding: 0.9rem 1rem;
   border: 1px solid #d9d2c5;
   border-radius: 0.9rem;
   background: rgba(255, 255, 255, 0.8);
+}
+
+.editor-actions {
+  justify-content: center;
 }
 
 .journey-grid {
@@ -1065,7 +1098,21 @@ a:hover {
   }
 
   .section-heading {
+      align-items: start;
+      flex-direction: column;
+    }
+
+  .editor-page-heading > div {
+    text-align: left;
+  }
+
+  .editor-publish-row {
+    flex-direction: column;
     align-items: start;
+  }
+
+  .editor-actions {
+    justify-content: stretch;
     flex-direction: column;
   }
 

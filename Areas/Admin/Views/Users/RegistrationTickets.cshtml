@@ -1,0 +1,94 @@
+@model ASP_PROJECT.Models.ViewModels.AdminRegistrationTicketsViewModel
+@{
+    ViewData["Title"] = "Purchase Tickets";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Administration</span>
+                <h1>Purchase tickets</h1>
+                <p class="text-secondary mb-0">@Model.BuyerName &middot; @Model.EventTitle</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Back to admin panel</a>
+                <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.UserId">Back to user</a>
+            </div>
+        </div>
+
+        <div class="detail-grid mb-4">
+            <div><strong>Buyer</strong><span>@Model.BuyerName</span></div>
+            <div><strong>Event</strong><span>@Model.EventTitle</span></div>
+            <div><strong>Venue</strong><span>@Model.VenueName</span></div>
+            <div><strong>Starts</strong><span>@Model.StartsAtUtc.ToLocalTime().ToString("f")</span></div>
+            <div><strong>Payment</strong><span>@Model.PaymentStatus (@(Model.AmountPaid == 0 ? "Free" : $"EUR {Model.AmountPaid:F2}"))</span></div>
+            <div><strong>Card</strong><span>@(string.IsNullOrWhiteSpace(Model.CardLast4) ? "-" : $"**** {Model.CardLast4}")</span></div>
+            <div><strong>Ordered</strong><span>@Model.RegisteredOnUtc.ToLocalTime().ToString("f")</span></div>
+            <div><strong>Tickets</strong><span>@Model.TicketsCount</span></div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Ticket list</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ticket code</th>
+                                <th>Verification</th>
+                                <th>Seat</th>
+                                <th>Note</th>
+                                <th>Status</th>
+                                <th>Check-in</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticket in Model.Tickets)
+                            {
+                                <tr>
+                                    <td>@ticket.TicketCode</td>
+                                    <td>@ticket.VerificationCode</td>
+                                    <td>@ticket.SeatLabel</td>
+                                    <td>@(string.IsNullOrWhiteSpace(ticket.TicketNote) ? "-" : ticket.TicketNote)</td>
+                                    <td>@ticket.PaymentStatus</td>
+                                    <td>
+                                        @if (ticket.IsCheckedIn)
+                                        {
+                                            <span class="text-success fw-semibold">Checked</span>
+                                            <div class="small text-secondary">@ticket.CheckedInOnUtc?.ToLocalTime().ToString("g")</div>
+                                            @if (!string.IsNullOrWhiteSpace(ticket.CheckedInByName))
+                                            {
+                                                <div class="small text-secondary">@ticket.CheckedInByName</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">Not checked</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="EditTicket" asp-route-id="@ticket.TicketId">Edit seat</a>
+                                            @if (ticket.IsCheckedIn)
+                                            {
+                                                <form asp-action="UncheckTicket" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="ticketId" value="@ticket.TicketId" />
+                                                    <input type="hidden" name="registrationId" value="@Model.RegistrationId" />
+                                                    <input type="hidden" name="userId" value="@Model.UserId" />
+                                                    <button class="btn btn-sm btn-outline-warning">Uncheck</button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

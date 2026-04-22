@@ -20,7 +20,9 @@ public interface IManagementService
     Task<TicketVerificationResultViewModel?> VerifyTicketAsync(string? ticketCode, string? verificationCode, IReadOnlyCollection<int>? allowedVenueIds = null, bool hasGlobalAccess = false);
     Task<TicketVerificationResultViewModel?> MarkTicketCheckedInAsync(string? ticketCode, IReadOnlyCollection<int>? allowedVenueIds, bool hasGlobalAccess, string? actorId, string actorName);
     Task<AdminUserDetailsViewModel?> GetUserDetailsAsync(string userId);
+    Task<AdminRegistrationTicketsViewModel?> GetRegistrationTicketsAsync(int registrationId);
     Task<AdminTicketEditViewModel?> BuildTicketEditorAsync(int ticketId);
+    Task<bool> UncheckTicketAsync(int ticketId, string actorId, string actorName);
     Task<bool> UpdateTicketAsync(AdminTicketEditViewModel model, string actorId, string actorName);
     Task<IReadOnlyCollection<UserAdminListItemViewModel>> GetVenueManagersAsync();
     Task<VenueAssignmentEditViewModel?> BuildVenueAssignmentsAsync(string userId);

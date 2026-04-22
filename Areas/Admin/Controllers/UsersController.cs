@@ -45,6 +45,17 @@ public class UsersController : Controller
         return View(model);
     }
 
+    public async Task<IActionResult> RegistrationTickets(int id)
+    {
+        var model = await _managementService.GetRegistrationTicketsAsync(id);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        return View(model);
+    }
+
     public async Task<IActionResult> EditTicket(int id)
     {
         var model = await _managementService.BuildTicketEditorAsync(id);
@@ -106,6 +117,15 @@ public class UsersController : Controller
 
         TempData["StatusMessage"] = "Ticket details updated successfully.";
         return RedirectToAction(nameof(Details), new { id = model.UserId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UncheckTicket(int ticketId, int registrationId)
+    {
+        var updated = await _managementService.UncheckTicketAsync(ticketId, GetActorId() ?? string.Empty, GetActorName());
+        TempData["StatusMessage"] = updated ? "Ticket check-in was removed." : "Ticket check-in could not be removed.";
+        return RedirectToAction(nameof(RegistrationTickets), new { id = registrationId });
     }
 
     private string? GetActorId()

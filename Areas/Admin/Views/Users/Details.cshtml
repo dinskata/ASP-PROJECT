@@ -47,7 +47,9 @@
                                     <td>@purchase.EventTitle</td>
                                     <td>@purchase.VenueName</td>
                                     <td>@purchase.StartsAtUtc.ToLocalTime().ToString("g")</td>
-                                    <td>@purchase.Tickets</td>
+                                    <td>
+                                        <a asp-action="RegistrationTickets" asp-route-id="@purchase.RegistrationId">@purchase.Tickets</a>
+                                    </td>
                                     <td>@(purchase.AmountPaid == 0 ? "Free" : $"EUR {purchase.AmountPaid:F2}")</td>
                                     <td>@purchase.PaymentStatus</td>
                                     <td>@purchase.RegisteredOnUtc.ToLocalTime().ToString("g")</td>

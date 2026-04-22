@@ -220,6 +220,62 @@ public class ManagementService : IManagementService
         };
     }
 
+    public async Task<AdminRegistrationTicketsViewModel?> GetRegistrationTicketsAsync(int registrationId)
+    {
+        var now = DateTime.UtcNow;
+
+        var registration = await _dbContext.Registrations
+            .AsNoTracking()
+            .Where(x => x.Id == registrationId)
+            .Include(x => x.Event)
+                .ThenInclude(x => x!.Venue)
+            .Include(x => x.User)
+            .Include(x => x.RegistrationTickets)
+            .SingleOrDefaultAsync();
+
+        if (registration is null || registration.Event is null || registration.User is null)
+        {
+            return null;
+        }
+
+        return new AdminRegistrationTicketsViewModel
+        {
+            RegistrationId = registration.Id,
+            UserId = registration.UserId,
+            BuyerName = registration.User.FullName,
+            EventTitle = registration.Event.Title,
+            VenueName = registration.Event.Venue!.Name,
+            StartsAtUtc = registration.Event.StartsAtUtc,
+            TicketsCount = registration.Tickets,
+            AmountPaid = registration.AmountPaid,
+            PaymentStatus = registration.PaymentStatus,
+            CardLast4 = registration.CardLast4,
+            RegisteredOnUtc = registration.RegisteredOnUtc,
+            Tickets = registration.RegistrationTickets
+                .OrderBy(x => x.TicketNumber)
+                .Select(x => new AdminUserTicketViewModel
+                {
+                    TicketId = x.Id,
+                    RegistrationId = x.RegistrationId,
+                    EventTitle = registration.Event.Title,
+                    VenueName = registration.Event.Venue!.Name,
+                    StartsAtUtc = registration.Event.StartsAtUtc,
+                    TicketCode = x.TicketCode,
+                    VerificationCode = x.VerificationCode,
+                    SeatLabel = x.SeatLabel,
+                    TicketNote = x.TicketNote,
+                    PaymentStatus = registration.PaymentStatus,
+                    CanEdit = registration.PaymentStatus == "Paid"
+                        && registration.Event.StartsAtUtc.AddMinutes(registration.Event.DurationMinutes) > now
+                        && !x.IsCheckedIn,
+                    IsCheckedIn = x.IsCheckedIn,
+                    CheckedInOnUtc = x.CheckedInOnUtc,
+                    CheckedInByName = x.CheckedInByName
+                })
+                .ToList()
+        };
+    }
+
     public async Task<UserAdminEditViewModel?> BuildUserEditorAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId);
@@ -826,6 +882,26 @@ public class ManagementService : IManagementService
                 TicketNote = x.TicketNote
             })
             .SingleOrDefaultAsync();
+    }
+
+    public async Task<bool> UncheckTicketAsync(int ticketId, string actorId, string actorName)
+    {
+        var ticket = await _dbContext.RegistrationTickets
+            .Include(x => x.Registration)
+                .ThenInclude(x => x!.Event)
+            .SingleOrDefaultAsync(x => x.Id == ticketId);
+        if (ticket is null || !ticket.IsCheckedIn)
+        {
+            return false;
+        }
+
+        ticket.IsCheckedIn = false;
+        ticket.CheckedInOnUtc = null;
+        ticket.CheckedInByName = string.Empty;
+
+        await _dbContext.SaveChangesAsync();
+        await LogAuditAsync("Ticket", "Uncheck", actorId, actorName, $"Reopened ticket {ticket.TicketCode} for {ticket.Registration?.Event?.Title ?? "event"}.", ticket.Id);
+        return true;
     }
 
     public async Task<bool> UpdateTicketAsync(AdminTicketEditViewModel model, string actorId, string actorName)
