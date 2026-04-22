@@ -1,6 +1,6 @@
 # Eventure
 
-DEPLOY URL: 
+DEPLOY URL: dinskata-001-site1.anytempurl.com
 
 Eventure is an ASP.NET Core MVC web application for discovering events, buying tickets, managing venues, moderating reviews, and handling role-based administration. The project was built as an individual course assignment for ASP.NET Advanced and was expanded beyond a simple event catalog into a small multi-role event platform.
 
