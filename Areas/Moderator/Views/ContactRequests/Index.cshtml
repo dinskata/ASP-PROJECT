@@ -1,0 +1,91 @@
+@model IReadOnlyCollection<ASP_PROJECT.Models.ViewModels.ContactRequestManagementItemViewModel>
+@{
+    ViewData["Title"] = "Contact Requests";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Support inbox</span>
+                <h1>Contact requests</h1>
+                <p class="text-secondary mb-0">Review incoming questions, update status, and keep internal follow-up notes.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Moderator" asp-controller="Dashboard" asp-action="Index">Back to moderator panel</a>
+            </div>
+        </div>
+
+        <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input name="searchTerm" class="form-control" value="@ViewBag.SearchTerm" placeholder="Search by person, email, subject, or message" />
+                </div>
+                <div class="col-md-3">
+                    <select name="statusFilter" class="form-select">
+                        <option value="all" selected="@(string.Equals(ViewBag.StatusFilter, "all"))">All statuses</option>
+                        <option value="Open" selected="@(string.Equals(ViewBag.StatusFilter, "Open"))">Open</option>
+                        <option value="In Progress" selected="@(string.Equals(ViewBag.StatusFilter, "In Progress"))">In Progress</option>
+                        <option value="Resolved" selected="@(string.Equals(ViewBag.StatusFilter, "Resolved"))">Resolved</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sortBy" class="form-select">
+                        <option value="newest" selected="@(string.Equals(ViewBag.SortBy, "newest"))">Newest first</option>
+                        <option value="oldest" selected="@(string.Equals(ViewBag.SortBy, "oldest"))">Oldest first</option>
+                        <option value="status" selected="@(string.Equals(ViewBag.SortBy, "status"))">By status</option>
+                        <option value="name" selected="@(string.Equals(ViewBag.SortBy, "name"))">By name</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-primary">Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>From</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Received</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@item.FullName</div>
+                                            <div class="small text-secondary">@item.Email</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold">@item.Subject</div>
+                                            <div class="small text-secondary">@item.MessagePreview</div>
+                                        </td>
+                                        <td>@item.Status</td>
+                                        <td>@item.CreatedOnUtc.ToLocalTime().ToString("g")</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Open</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="mb-0 text-secondary">No contact requests match the current filters.</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

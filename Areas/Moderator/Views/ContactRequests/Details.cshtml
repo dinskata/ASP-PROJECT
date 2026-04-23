@@ -1,0 +1,77 @@
+@model ASP_PROJECT.Models.ViewModels.ContactRequestUpdateViewModel
+@{
+    ViewData["Title"] = "Contact Request";
+}
+
+<section class="section-space">
+    <div class="container editor-shell">
+        <div class="section-heading editor-page-heading">
+            <div>
+                <span class="section-label">Support inbox</span>
+                <h1>@Model.Subject</h1>
+                <p class="text-secondary mb-0">@Model.FullName • @Model.Email</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-action="Index">Back to requests</a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="h5">Message</h2>
+                        <p class="text-secondary small mb-3">Received on @Model.CreatedOnUtc.ToLocalTime().ToString("f")</p>
+                        <div class="contact-request-body">@Model.Message</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <form method="post" class="vstack gap-3">
+                            <input asp-for="Id" type="hidden" />
+                            <input asp-for="FullName" type="hidden" />
+                            <input asp-for="Email" type="hidden" />
+                            <input asp-for="Subject" type="hidden" />
+                            <input asp-for="Message" type="hidden" />
+                            <input asp-for="CreatedOnUtc" type="hidden" />
+                            <input asp-for="ResolvedOnUtc" type="hidden" />
+                            <input asp-for="ResolvedByName" type="hidden" />
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <div>
+                                <label asp-for="Status" class="form-label"></label>
+                                <select asp-for="Status" class="form-select">
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Resolved">Resolved</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                            <div>
+                                <label asp-for="InternalNote" class="form-label"></label>
+                                <textarea asp-for="InternalNote" class="form-control" rows="7" placeholder="Internal follow-up notes, reply summary, or assignment details"></textarea>
+                                <span asp-validation-for="InternalNote" class="text-danger"></span>
+                            </div>
+                            @if (Model.ResolvedOnUtc.HasValue)
+                            {
+                                <div class="small text-secondary">
+                                    Resolved on @Model.ResolvedOnUtc.Value.ToLocalTime().ToString("g")
+                                    @if (!string.IsNullOrWhiteSpace(Model.ResolvedByName))
+                                    {
+                                        <text> by @Model.ResolvedByName</text>
+                                    }
+                                </div>
+                            }
+                            <button type="submit" class="btn btn-primary">Save request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

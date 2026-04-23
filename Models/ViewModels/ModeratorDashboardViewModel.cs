@@ -5,5 +5,6 @@ public class ModeratorDashboardViewModel
     public int PendingReviewsCount { get; init; }
     public int ApprovedReviewsCount { get; init; }
     public int VenueManagersCount { get; init; }
+    public int OpenContactRequestsCount { get; init; }
     public IReadOnlyCollection<ReviewModerationListItemViewModel> RecentReviews { get; init; } = Array.Empty<ReviewModerationListItemViewModel>();
 }

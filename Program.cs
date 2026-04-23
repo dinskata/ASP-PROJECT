@@ -46,6 +46,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
+builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IManagementService, ManagementService>();
 

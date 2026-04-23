@@ -227,6 +227,7 @@ public class ManagementService : IManagementService
             VenueManagersCount = string.IsNullOrWhiteSpace(venueManagerRoleId)
                 ? 0
                 : await _dbContext.UserRoles.CountAsync(x => x.RoleId == venueManagerRoleId),
+            OpenContactRequestsCount = await _dbContext.ContactRequests.CountAsync(x => x.Status == ContactRequestStatuses.Open),
             RecentReviews = await _dbContext.Reviews
                 .AsNoTracking()
                 .Include(x => x.Event)
@@ -248,6 +249,9 @@ public class ManagementService : IManagementService
                 .ToListAsync()
         };
     }
+
+    public Task<int> GetOpenContactRequestsCountAsync()
+        => _dbContext.ContactRequests.CountAsync(x => x.Status == ContactRequestStatuses.Open);
 
     public async Task<IReadOnlyCollection<UserAdminListItemViewModel>> GetUsersAsync(string? searchTerm = null, string? sortBy = null)
     {

@@ -10,6 +10,7 @@ public class AdminDashboardViewModel
     public int RefundedPaymentsCount { get; init; }
     public int VenueManagersCount { get; init; }
     public int SiteModeratorsCount { get; init; }
+    public int OpenContactRequestsCount { get; init; }
     public IReadOnlyCollection<EventListItemViewModel> NextEvents { get; init; } = Array.Empty<EventListItemViewModel>();
     public IReadOnlyCollection<AuditLogListItemViewModel> RecentAuditEntries { get; init; } = Array.Empty<AuditLogListItemViewModel>();
 }

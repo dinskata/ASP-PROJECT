@@ -17,6 +17,7 @@
                 <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Audit" asp-action="Index">Audit History</a>
                 <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Statistics" asp-action="Index">Venue Statistics</a>
                 <a class="btn btn-outline-primary" asp-area="Moderator" asp-controller="Announcements" asp-action="Index">Announcements</a>
+                <a class="btn btn-outline-primary" asp-area="Moderator" asp-controller="ContactRequests" asp-action="Index">Contact Requests</a>
                 <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Venues" asp-action="Index">Manage Venues</a>
                 <a class="btn btn-primary" asp-area="Admin" asp-controller="Events" asp-action="Create">Create Event</a>
             </div>
@@ -32,6 +33,9 @@
             <div class="col-md-3"><div class="feature-card"><h5>Refunded</h5><p>@Model.RefundedPaymentsCount payment(s) refunded.</p></div></div>
             <div class="col-md-3"><div class="feature-card"><h5>Venue Managers</h5><p>@Model.VenueManagersCount active account(s).</p></div></div>
             <div class="col-md-3"><div class="feature-card"><h5>Moderators</h5><p>@Model.SiteModeratorsCount active account(s).</p></div></div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-4"><div class="feature-card"><h5>Open Contact Requests</h5><p>@Model.OpenContactRequestsCount request(s) waiting for follow-up.</p></div></div>
         </div>
         <div class="card border-0 shadow-sm">
             <div class="card-body">

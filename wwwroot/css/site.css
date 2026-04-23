@@ -646,6 +646,12 @@ a:hover {
   justify-content: center;
 }
 
+.contact-request-body {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: var(--text);
+}
+
 .journey-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

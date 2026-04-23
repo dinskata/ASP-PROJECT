@@ -11,15 +11,18 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly IAnnouncementService _announcementService;
     private readonly IEventService _eventService;
+    private readonly IContactRequestService _contactRequestService;
 
     public HomeController(
         ILogger<HomeController> logger,
         IAnnouncementService announcementService,
-        IEventService eventService)
+        IEventService eventService,
+        IContactRequestService contactRequestService)
     {
         _logger = logger;
         _announcementService = announcementService;
         _eventService = eventService;
+        _contactRequestService = contactRequestService;
     }
 
     public async Task<IActionResult> Index()
@@ -37,13 +40,14 @@ public class HomeController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Contact(ContactFormViewModel model)
+    public async Task<IActionResult> Contact(ContactFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
             return View(model);
         }
 
+        await _contactRequestService.CreateAsync(model);
         TempData["StatusMessage"] = "Your message has been sent successfully.";
         ModelState.Clear();
         return View(new ContactFormViewModel());

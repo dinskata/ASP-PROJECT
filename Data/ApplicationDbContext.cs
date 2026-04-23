@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<RegistrationTicket> RegistrationTickets => Set<RegistrationTicket>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
     public DbSet<UserVenueAssignment> UserVenueAssignments => Set<UserVenueAssignment>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
@@ -48,6 +49,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<UserVenueAssignment>()
             .HasIndex(x => new { x.UserId, x.VenueId })
             .IsUnique();
+
+        builder.Entity<ContactRequest>()
+            .HasIndex(x => new { x.Status, x.CreatedOnUtc });
 
         builder.Entity<Event>()
             .Property(x => x.Price)

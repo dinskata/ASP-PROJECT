@@ -544,6 +544,7 @@ public class EventService : IEventService
             RefundedPaymentsCount = await _dbContext.Registrations.CountAsync(x => x.PaymentStatus == "Refunded"),
             VenueManagersCount = string.IsNullOrWhiteSpace(venueManagerRoleId) ? 0 : await _dbContext.UserRoles.CountAsync(x => x.RoleId == venueManagerRoleId),
             SiteModeratorsCount = string.IsNullOrWhiteSpace(siteModeratorRoleId) ? 0 : await _dbContext.UserRoles.CountAsync(x => x.RoleId == siteModeratorRoleId),
+            OpenContactRequestsCount = await _dbContext.ContactRequests.CountAsync(x => x.Status == ContactRequestStatuses.Open),
             NextEvents = await _dbContext.Events
                 .AsNoTracking()
                 .Include(x => x.Category)
