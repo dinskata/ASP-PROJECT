@@ -1,6 +1,6 @@
 # Eventure
 
-Live demo:
+Live demo: https://asp-project-1x6j.onrender.com/
 
 Eventure is an ASP.NET Core MVC web application for browsing events, purchasing tickets, managing venues, moderating reviews, and handling role-based administration. The project was developed as an individual ASP.NET Advanced course assignment and grew from a basic event listing idea into a multi-role platform with operational workflows, ticket verification, refund handling, and audit tracking.
 
