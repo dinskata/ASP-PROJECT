@@ -1,0 +1,9 @@
+.git
+.github
+.vs
+bin
+obj
+.codex-build
+ASP PROJECT.Tests/bin
+ASP PROJECT.Tests/obj
+node_modules
