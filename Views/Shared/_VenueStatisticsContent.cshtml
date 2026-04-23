@@ -1,0 +1,96 @@
+@model ASP_PROJECT.Models.ViewModels.VenueStatisticsPageViewModel
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label for="venueId" class="form-label">Venue</label>
+                <select id="venueId" name="venueId" class="form-select">
+                    @foreach (var venue in Model.AvailableVenues)
+                    {
+                        <option value="@venue.Id" selected="@(venue.IsSelected ? "selected" : null)">@venue.Name (@venue.City)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4 d-grid">
+                <button type="submit" class="btn btn-primary">Load statistics</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.SelectedVenue is null)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <p class="mb-0 text-secondary">No venues are available for statistics in this view yet.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4 mb-4">
+        <div class="col-md-3"><div class="feature-card"><h5>Venue</h5><p>@Model.SelectedVenue.VenueName, @Model.SelectedVenue.City</p></div></div>
+        <div class="col-md-3"><div class="feature-card"><h5>Events</h5><p>@Model.SelectedVenue.TotalEvents total / @Model.SelectedVenue.PublishedEvents published</p></div></div>
+        <div class="col-md-3"><div class="feature-card"><h5>Tickets Sold</h5><p>@Model.SelectedVenue.TicketsSold ticket(s) sold</p></div></div>
+        <div class="col-md-3"><div class="feature-card"><h5>Revenue</h5><p>EUR @Model.SelectedVenue.GrossRevenue.ToString("F2")</p></div></div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3"><div class="feature-card"><h5>Check-in Rate</h5><p>@Model.SelectedVenue.CheckInRatePercent.ToString("F1")%</p></div></div>
+        <div class="col-md-3"><div class="feature-card"><h5>Refund Rate</h5><p>@Model.SelectedVenue.RefundRatePercent.ToString("F1")%</p></div></div>
+        <div class="col-md-3"><div class="feature-card"><h5>Venue Rating</h5><p>@Model.SelectedVenue.AverageRating.ToString("F1")/5 from @Model.SelectedVenue.ApprovedReviewsCount review(s)</p></div></div>
+        <div class="col-md-3"><div class="feature-card"><h5>Checked In</h5><p>@Model.SelectedVenue.CheckedInTickets ticket(s) checked in</p></div></div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6"><div class="feature-card"><h5>Top-Selling Event</h5><p>@Model.SelectedVenue.TopEventTitle</p></div></div>
+        <div class="col-md-6"><div class="feature-card"><h5>Best Rated Event</h5><p>@Model.SelectedVenue.BestRatedEventTitle</p></div></div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h2 class="h5">Event performance</h2>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Tickets Sold</th>
+                            <th>Checked In</th>
+                            <th>Refunded</th>
+                            <th>Revenue</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.SelectedVenue.Events)
+                        {
+                            <tr>
+                                <td>@item.Title</td>
+                                <td>@item.StartsAtUtc.ToLocalTime().ToString("g")</td>
+                                <td>@(item.HasEnded ? "Ended" : item.IsPublished ? "Upcoming" : "Draft")</td>
+                                <td>@item.TicketsSold</td>
+                                <td>@item.CheckedInTickets</td>
+                                <td>@item.RefundedTickets</td>
+                                <td>EUR @item.GrossRevenue.ToString("F2")</td>
+                                <td>
+                                    @if (item.ReviewCount > 0)
+                                    {
+                                        <text>@item.AverageRating.ToString("F1")/5 (@item.ReviewCount)</text>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary">No reviews yet</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

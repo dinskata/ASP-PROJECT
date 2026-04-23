@@ -1,0 +1,21 @@
+@model ASP_PROJECT.Models.ViewModels.VenueStatisticsPageViewModel
+@{
+    ViewData["Title"] = "Venue Statistics";
+}
+
+<section class="section-space">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Venue management</span>
+                <h1>Venue statistics</h1>
+                <p class="text-secondary mb-0">Track ticket sales, refunds, review activity, and check-in performance across your assigned venues.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary" asp-area="Manager" asp-controller="Dashboard" asp-action="Index">Back to manager panel</a>
+            </div>
+        </div>
+
+        <partial name="~/Views/Shared/_VenueStatisticsContent.cshtml" model="Model" />
+    </div>
+</section>

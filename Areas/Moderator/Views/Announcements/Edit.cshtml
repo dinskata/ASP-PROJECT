@@ -1,0 +1,34 @@
+@model ASP_PROJECT.Models.ViewModels.AnnouncementEditViewModel
+@{
+    ViewData["Title"] = "Edit Announcement";
+}
+
+<section class="section-space">
+    <div class="container editor-shell">
+        <div class="section-heading editor-page-heading">
+            <div>
+                <span class="section-label">Updates</span>
+                <h1>Edit announcement</h1>
+                <p class="text-secondary mb-0">Adjust wording, audience, timing, or pinned placement.</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="post" class="row g-4">
+                    <input asp-for="Id" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <partial name="_AnnouncementForm" model="Model" />
+                    <div class="col-12 d-flex gap-2 justify-content-center flex-wrap editor-actions">
+                        <a class="btn btn-outline-secondary" asp-action="Index">Back to announcements</a>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

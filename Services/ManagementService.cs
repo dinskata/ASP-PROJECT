@@ -54,6 +54,165 @@ public class ManagementService : IManagementService
         };
     }
 
+    public async Task<VenueStatisticsPageViewModel> GetVenueStatisticsAsync(IReadOnlyCollection<int>? allowedVenueIds = null, int? selectedVenueId = null)
+    {
+        var now = DateTime.UtcNow;
+        var venuesQuery = _dbContext.Venues.AsNoTracking().AsQueryable();
+
+        if (allowedVenueIds is { Count: > 0 })
+        {
+            venuesQuery = venuesQuery.Where(x => allowedVenueIds.Contains(x.Id));
+        }
+        else if (allowedVenueIds is not null)
+        {
+            venuesQuery = venuesQuery.Where(_ => false);
+        }
+
+        var availableVenues = await venuesQuery
+            .OrderBy(x => x.City)
+            .ThenBy(x => x.Name)
+            .Select(x => new SelectableVenueViewModel
+            {
+                Id = x.Id,
+                Name = x.Name,
+                City = x.City
+            })
+            .ToListAsync();
+
+        var resolvedVenueId = selectedVenueId.HasValue && availableVenues.Any(x => x.Id == selectedVenueId.Value)
+            ? selectedVenueId
+            : availableVenues.FirstOrDefault()?.Id;
+
+        foreach (var venue in availableVenues)
+        {
+            venue.IsSelected = resolvedVenueId.HasValue && venue.Id == resolvedVenueId.Value;
+        }
+
+        VenueStatisticsSummaryViewModel? summary = null;
+        if (resolvedVenueId.HasValue)
+        {
+            summary = await venuesQuery
+                .Where(x => x.Id == resolvedVenueId.Value)
+                .Select(x => new VenueStatisticsSummaryViewModel
+                {
+                    VenueId = x.Id,
+                    VenueName = x.Name,
+                    City = x.City,
+                    Capacity = x.Capacity,
+                    TotalEvents = x.Events.Count,
+                    PublishedEvents = x.Events.Count(e => e.IsPublished),
+                    UpcomingEvents = x.Events.Count(e => e.StartsAtUtc.AddMinutes(e.DurationMinutes) > now),
+                    EndedEvents = x.Events.Count(e => e.StartsAtUtc.AddMinutes(e.DurationMinutes) <= now),
+                    TicketsSold = x.Events
+                        .SelectMany(e => e.Registrations)
+                        .Where(r => r.PaymentStatus == "Paid")
+                        .Sum(r => (int?)r.Tickets) ?? 0,
+                    CheckedInTickets = x.Events
+                        .SelectMany(e => e.Registrations)
+                        .SelectMany(r => r.RegistrationTickets)
+                        .Count(t => t.IsCheckedIn),
+                    RefundedTickets = x.Events
+                        .SelectMany(e => e.Registrations)
+                        .Where(r => r.PaymentStatus == "Refunded")
+                        .Sum(r => (int?)r.Tickets) ?? 0,
+                    GrossRevenue = x.Events
+                        .SelectMany(e => e.Registrations)
+                        .Where(r => r.PaymentStatus == "Paid")
+                        .Sum(r => (decimal?)r.AmountPaid) ?? 0,
+                    RefundedAmount = x.Events
+                        .SelectMany(e => e.Registrations)
+                        .Where(r => r.PaymentStatus == "Refunded")
+                        .Sum(r => (decimal?)r.AmountPaid) ?? 0,
+                    ApprovedReviewsCount = x.Events
+                        .SelectMany(e => e.Reviews)
+                        .Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
+                    AverageRating = x.Events
+                        .SelectMany(e => e.Reviews)
+                        .Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                            ? 0
+                            : x.Events
+                                .SelectMany(e => e.Reviews)
+                                .Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved)
+                                .Average(r => r.Rating)
+                })
+                .SingleOrDefaultAsync();
+
+            if (summary is not null)
+            {
+                var eventItems = await _dbContext.Events
+                    .AsNoTracking()
+                    .Where(x => x.VenueId == resolvedVenueId.Value)
+                    .Select(x => new VenueStatisticsEventViewModel
+                    {
+                        EventId = x.Id,
+                        Title = x.Title,
+                        StartsAtUtc = x.StartsAtUtc,
+                        EndsAtUtc = x.StartsAtUtc.AddMinutes(x.DurationMinutes),
+                        IsPublished = x.IsPublished,
+                        HasEnded = x.StartsAtUtc.AddMinutes(x.DurationMinutes) <= now,
+                        TicketsSold = x.Registrations.Where(r => r.PaymentStatus == "Paid").Sum(r => (int?)r.Tickets) ?? 0,
+                        CheckedInTickets = x.Registrations.SelectMany(r => r.RegistrationTickets).Count(t => t.IsCheckedIn),
+                        RefundedTickets = x.Registrations.Where(r => r.PaymentStatus == "Refunded").Sum(r => (int?)r.Tickets) ?? 0,
+                        GrossRevenue = x.Registrations.Where(r => r.PaymentStatus == "Paid").Sum(r => (decimal?)r.AmountPaid) ?? 0,
+                        RefundedAmount = x.Registrations.Where(r => r.PaymentStatus == "Refunded").Sum(r => (decimal?)r.AmountPaid) ?? 0,
+                        ReviewCount = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved),
+                        AverageRating = x.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatuses.Approved) == 0
+                            ? 0
+                            : x.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatuses.Approved).Average(r => r.Rating)
+                    })
+                    .ToListAsync();
+
+                var orderedEvents = eventItems
+                    .Where(x => !x.HasEnded)
+                    .OrderBy(x => x.StartsAtUtc)
+                    .Concat(eventItems.Where(x => x.HasEnded).OrderByDescending(x => x.EndsAtUtc))
+                    .ToList();
+
+                var topEvent = orderedEvents
+                    .OrderByDescending(x => x.TicketsSold)
+                    .ThenByDescending(x => x.GrossRevenue)
+                    .FirstOrDefault();
+
+                var bestRatedEvent = orderedEvents
+                    .Where(x => x.ReviewCount > 0)
+                    .OrderByDescending(x => x.AverageRating)
+                    .ThenByDescending(x => x.ReviewCount)
+                    .FirstOrDefault();
+
+                summary = new VenueStatisticsSummaryViewModel
+                {
+                    VenueId = summary.VenueId,
+                    VenueName = summary.VenueName,
+                    City = summary.City,
+                    Capacity = summary.Capacity,
+                    TotalEvents = summary.TotalEvents,
+                    PublishedEvents = summary.PublishedEvents,
+                    UpcomingEvents = summary.UpcomingEvents,
+                    EndedEvents = summary.EndedEvents,
+                    TicketsSold = summary.TicketsSold,
+                    CheckedInTickets = summary.CheckedInTickets,
+                    RefundedTickets = summary.RefundedTickets,
+                    GrossRevenue = summary.GrossRevenue,
+                    RefundedAmount = summary.RefundedAmount,
+                    ApprovedReviewsCount = summary.ApprovedReviewsCount,
+                    AverageRating = summary.AverageRating,
+                    CheckInRatePercent = summary.TicketsSold == 0 ? 0 : Math.Round(summary.CheckedInTickets * 100d / summary.TicketsSold, 1),
+                    RefundRatePercent = summary.TicketsSold == 0 ? 0 : Math.Round(summary.RefundedTickets * 100d / summary.TicketsSold, 1),
+                    TopEventTitle = topEvent?.Title ?? "No events yet",
+                    BestRatedEventTitle = bestRatedEvent?.Title ?? "No rated events yet",
+                    Events = orderedEvents
+                };
+            }
+        }
+
+        return new VenueStatisticsPageViewModel
+        {
+            SelectedVenueId = resolvedVenueId,
+            AvailableVenues = availableVenues,
+            SelectedVenue = summary
+        };
+    }
+
     public async Task<ModeratorDashboardViewModel> GetModeratorDashboardAsync()
     {
         var venueManagerRoleId = await _dbContext.Roles
@@ -341,6 +500,8 @@ public class ManagementService : IManagementService
         }
 
         var desiredRoles = new List<string>();
+        desiredRoles.Add(DbInitializer.UserRole);
+
         if (model.IsBuyer)
         {
             desiredRoles.Add(DbInitializer.BuyerRole);

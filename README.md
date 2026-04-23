@@ -14,8 +14,8 @@ The platform also includes internal workflows for venue operations and site admi
 
 The application supports several distinct roles with different responsibilities:
 
-- `Buyer`  
-  The standard registered user role. Buyers can purchase tickets, view active purchases, request refunds when allowed, and submit reviews for events they actually attended.
+- `User` / `Buyer`  
+  Registered accounts receive the standard user role together with the application-specific buyer role. These users can purchase tickets, view active purchases, request refunds when allowed, and submit reviews for events they actually attended.
 
 - `Venue Manager`  
   Manages only assigned venues. This role can create and edit events for those venues and manage venue staff access for the same scope.
@@ -206,25 +206,25 @@ This makes the project easier to review because a fresh database still contains 
 The following demo accounts are seeded for testing:
 
 - `admin@eventure.local` / `Admin123!`  
-  Roles: `Administrator`, `Buyer`
+  Roles: `Administrator`, `User`, `Buyer`
 
 - `test@test.com` / `Test1234`  
-  Roles: `Buyer`
+  Roles: `User`, `Buyer`
 
 - `venuemanager@eventure.local` / `Venue1234`  
-  Roles: `Venue Manager`, `Buyer`
+  Roles: `Venue Manager`, `User`, `Buyer`
 
 - `venuestaff@eventure.local` / `Staff1234`  
   Roles: `Venue Staff`
 
 - `moderator@eventure.local` / `Moder1234`  
-  Roles: `Site Moderator`, `Buyer`
+  Roles: `Site Moderator`, `User`, `Buyer`
 
 - `buyer@eventure.local` / `Buyer123!`  
-  Roles: `Buyer`
+  Roles: `User`, `Buyer`
 
 - `reviewer@eventure.local` / `Reviewer123!`  
-  Roles: `Buyer`
+  Roles: `User`, `Buyer`
 
 ## Local Setup
 

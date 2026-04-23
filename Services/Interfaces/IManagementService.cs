@@ -6,6 +6,7 @@ public interface IManagementService
 {
     Task<ManagerDashboardViewModel> GetManagerDashboardAsync(string userId);
     Task<ModeratorDashboardViewModel> GetModeratorDashboardAsync();
+    Task<VenueStatisticsPageViewModel> GetVenueStatisticsAsync(IReadOnlyCollection<int>? allowedVenueIds = null, int? selectedVenueId = null);
     Task<IReadOnlyCollection<UserAdminListItemViewModel>> GetUsersAsync(string? searchTerm = null, string? sortBy = null);
     Task<UserAdminEditViewModel?> BuildUserEditorAsync(string userId);
     Task<bool> UpdateUserAsync(UserAdminEditViewModel model, string actorId, string actorName);

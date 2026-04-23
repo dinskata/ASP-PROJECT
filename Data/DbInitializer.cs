@@ -9,6 +9,7 @@ public static class DbInitializer
 {
     private const string DefaultLocalDbConnection = "Server=(localdb)\\mssqllocaldb;Database=aspnet-ASP_PROJECT-65637b89-fe41-4c16-a765-7c3e79a8fe75;Trusted_Connection=True;MultipleActiveResultSets=true";
     public const string AdministratorRole = "Administrator";
+    public const string UserRole = "User";
     public const string BuyerRole = "Buyer";
     public const string VenueManagerRole = "Venue Manager";
     public const string VenueStaffRole = "Venue Staff";
@@ -41,7 +42,7 @@ public static class DbInitializer
             dbContext.Database.SetConnectionString(DefaultLocalDbConnection);
         }
 
-        foreach (var roleName in new[] { AdministratorRole, BuyerRole, VenueManagerRole, VenueStaffRole, SiteModeratorRole })
+        foreach (var roleName in new[] { AdministratorRole, UserRole, BuyerRole, VenueManagerRole, VenueStaffRole, SiteModeratorRole })
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
@@ -379,6 +380,11 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(adminUser, BuyerRole);
         }
 
+        if (!await userManager.IsInRoleAsync(adminUser, UserRole))
+        {
+            await userManager.AddToRoleAsync(adminUser, UserRole);
+        }
+
         var testUser = await userManager.FindByEmailAsync(TestUserEmail);
         if (testUser is null)
         {
@@ -406,6 +412,11 @@ public static class DbInitializer
         if (!await userManager.IsInRoleAsync(testUser, BuyerRole))
         {
             await userManager.AddToRoleAsync(testUser, BuyerRole);
+        }
+
+        if (!await userManager.IsInRoleAsync(testUser, UserRole))
+        {
+            await userManager.AddToRoleAsync(testUser, UserRole);
         }
 
         var venueManagerUser = await userManager.FindByEmailAsync(TestVenueManagerEmail);
@@ -440,6 +451,11 @@ public static class DbInitializer
         if (!await userManager.IsInRoleAsync(venueManagerUser, BuyerRole))
         {
             await userManager.AddToRoleAsync(venueManagerUser, BuyerRole);
+        }
+
+        if (!await userManager.IsInRoleAsync(venueManagerUser, UserRole))
+        {
+            await userManager.AddToRoleAsync(venueManagerUser, UserRole);
         }
 
         foreach (var venueId in new[] { skyline.Id, northHub.Id })
@@ -526,6 +542,11 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(siteModeratorUser, BuyerRole);
         }
 
+        if (!await userManager.IsInRoleAsync(siteModeratorUser, UserRole))
+        {
+            await userManager.AddToRoleAsync(siteModeratorUser, UserRole);
+        }
+
         var demoBuyer = await userManager.FindByEmailAsync(DemoBuyerEmail);
         if (demoBuyer is null)
         {
@@ -555,6 +576,11 @@ public static class DbInitializer
             await userManager.AddToRoleAsync(demoBuyer, BuyerRole);
         }
 
+        if (!await userManager.IsInRoleAsync(demoBuyer, UserRole))
+        {
+            await userManager.AddToRoleAsync(demoBuyer, UserRole);
+        }
+
         var demoReviewer = await userManager.FindByEmailAsync(DemoReviewerEmail);
         if (demoReviewer is null)
         {
@@ -582,6 +608,11 @@ public static class DbInitializer
         if (!await userManager.IsInRoleAsync(demoReviewer, BuyerRole))
         {
             await userManager.AddToRoleAsync(demoReviewer, BuyerRole);
+        }
+
+        if (!await userManager.IsInRoleAsync(demoReviewer, UserRole))
+        {
+            await userManager.AddToRoleAsync(demoReviewer, UserRole);
         }
 
         var pastFrontendEvent = await dbContext.Events.SingleAsync(x => x.Title == "Frontend Systems Retrospective");
