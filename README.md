@@ -1,76 +1,124 @@
 # Eventure
 
-DEPLOY URL: dinskata-001-site1.anytempurl.com
+Live demo:
 
-Eventure is an ASP.NET Core MVC web application for discovering events, buying tickets, managing venues, moderating reviews, and handling role-based administration. The project was built as an individual course assignment for ASP.NET Advanced and was expanded beyond a simple event catalog into a small multi-role event platform.
+Eventure is an ASP.NET Core MVC web application for browsing events, purchasing tickets, managing venues, moderating reviews, and handling role-based administration. The project was developed as an individual ASP.NET Advanced course assignment and grew from a basic event listing idea into a multi-role platform with operational workflows, ticket verification, refund handling, and audit tracking.
 
-## What The Project Does
+## Project Concept
 
-Visitors can:
+The main idea behind Eventure is to present a realistic event platform rather than a simple CRUD catalog. Public visitors can explore events, venues, and announcements, while authenticated users can buy tickets, manage their purchases, and leave reviews after attending finished events.
+
+The platform also includes internal workflows for venue operations and site administration. Venue managers can manage the venues assigned to them and create events only for those venues. Venue staff can verify tickets on entry. Site moderators can review user-generated content and supervise operational data. Administrators have full access to users, roles, venues, events, payments, tickets, and audit history.
+
+## User Roles
+
+The application supports several distinct roles with different responsibilities:
+
+- `Buyer`  
+  The standard registered user role. Buyers can purchase tickets, view active purchases, request refunds when allowed, and submit reviews for events they actually attended.
+
+- `Venue Manager`  
+  Manages only assigned venues. This role can create and edit events for those venues and manage venue staff access for the same scope.
+
+- `Venue Staff`  
+  Focused on ticket verification. This role can inspect tickets and mark them as checked in for the assigned venue.
+
+- `Site Moderator`  
+  Moderates reviews, supervises ticket-related activity, and helps maintain platform content and assignments.
+
+- `Administrator`  
+  Has full platform access, including users and roles, venues, events, reviews, payments and refunds, ticket history, and audit records.
+
+## Functional Overview
+
+### Public Area
+
+The public part of the site allows visitors to:
 
 - browse upcoming and ended events
-- filter events by search, category, and status
-- explore venue pages with ratings and hosted-event history
-- read announcements and contact the team
+- filter events by search term, category, and event status
+- view event details with pricing, timing, venue information, and ticket purchase actions
+- browse venue pages and see hosted-event history
+- read platform announcements
+- contact the Eventure team
 
-Registered buyers can:
+### Buyer Experience
 
-- create an account and sign in with ASP.NET Identity
-- buy tickets through a test payment flow
-- see purchases in a personal dashboard
-- open ticket details, verification codes, and demo QR codes
-- request refunds when the event is still more than 48 hours away
-- review attended events after they have ended
+After signing in, a buyer can:
 
-Staff roles have their own working areas:
+- purchase tickets through a test payment flow
+- see purchases on the personal dashboard
+- open generated tickets with unique ticket codes, verification codes, and demo QR codes
+- request a refund when the event is more than 48 hours away
+- review ended events only when the buyer has a valid attended purchase
 
-- `Venue Manager` can manage assigned venues, create events for those venues, and manage venue staff access
-- `Venue Staff` can verify tickets for assigned venues
-- `Site Moderator` can moderate reviews, view ticket activity, and manage venue-manager assignments
-- `Administrator` can manage users, roles, venues, events, reviews, payments, refunds, ticket activity, and audit history
+### Operations And Back Office
+
+The administrative side of the application supports:
+
+- venue-scoped event management
+- venue-staff assignment
+- ticket verification and check-in
+- prevention of duplicate ticket reuse
+- review moderation
+- payment and refund overview
+- per-user purchase and ticket inspection
+- audit history for key platform actions
 
 ## Main Features
 
-- public event catalog with filtering and chronological status grouping
-- venue directory with ratings based on hosted-event reviews
-- announcements page with pinned and recent updates
-- ticket purchase flow with accepted / denied test payment actions
-- per-ticket details with unique ticket code, verification code, seat, and QR demo
-- ticket verification flow for venue operations
-- ticket check-in tracking so the same ticket cannot be reused
-- refund requests with business-rule checks
+- multi-role ASP.NET Identity setup
+- event catalog with filtering and status grouping
+- venue directory with calculated venue ratings
+- announcements with pinned and recent sections
+- test payment flow for ticket purchases
+- ticket wallet with seat details, verification codes, and printable ticket views
+- refund handling with business-rule restrictions
 - review flow limited to verified attendees after event completion
-- admin, moderator, and manager areas with scoped permissions
-- audit logging for important platform actions
-- seeded demo data for roles, venues, events, purchases, reviews, and tickets
+- ticket verification screen for operational roles
+- checked-in ticket history and one-time entry tracking
+- admin, moderator, and manager areas
+- seeded sample data across the whole platform
 
-## Tech Stack
+## Application Architecture
 
-- ASP.NET Core MVC
-- .NET 9
-- Razor Views and partial views
-- Entity Framework Core
-- Microsoft SQL Server / LocalDB
-- ASP.NET Core Identity
-- Bootstrap 5 and custom CSS
-- xUnit for unit testing
+Eventure follows a layered ASP.NET Core MVC structure.
 
-## Project Structure
+### Presentation Layer
 
-- `Controllers` contains the public MVC controllers
-- `Areas/Admin` contains administrator-only pages and workflows
-- `Areas/Manager` contains venue manager pages and actions
-- `Areas/Moderator` contains moderation tools
-- `Areas/Identity` contains the customized Identity account pages
-- `Services` contains the business logic layer
-- `Data` contains the EF Core context, migrations, bootstrap logic, and seeding
-- `Models` contains both entity models and view models
-- `Views` contains Razor views, shared layouts, and partials
-- `ASP PROJECT.Tests` contains unit tests for service logic
+The presentation layer is built with:
 
-## Entity Models
+- ASP.NET Core MVC controllers
+- Razor views
+- shared layouts and partial views
+- Bootstrap-based responsive structure with custom styling
 
-The project uses more than the minimum required number of entity models. The main persisted models are:
+The application uses MVC Areas to separate the public experience from privileged role panels:
+
+- `Areas/Admin`
+- `Areas/Manager`
+- `Areas/Moderator`
+- `Areas/Identity`
+
+### Service Layer
+
+Business logic is concentrated in services, which keeps the controllers thinner and easier to reason about. The main service interfaces and implementations are located in the `Services` folder.
+
+Current service responsibilities include:
+
+- event listing, purchase rules, reviews, refunds, and ticket generation
+- venue listing and venue detail aggregation
+- announcements
+- dashboard summaries
+- management features for roles, tickets, payments, moderation, and audit history
+
+### Data Layer
+
+Data access is handled with Entity Framework Core through `ApplicationDbContext`. The project uses SQL Server and applies EF Core migrations on startup. Database seeding is also performed on startup so a fresh environment gets enough content to demonstrate the full workflow.
+
+## Entity Model
+
+The project includes more than the minimum required number of entity models. The most important persisted models are:
 
 - `ApplicationUser`
 - `Category`
@@ -83,131 +131,170 @@ The project uses more than the minimum required number of entity models. The mai
 - `AuditLog`
 - `UserVenueAssignment`
 
-## Architecture Notes
+These models support both the public event functionality and the internal management workflows.
 
-The application follows a layered MVC structure. Controllers stay relatively thin and delegate business rules to services. Data access is handled through EF Core and `ApplicationDbContext`. Identity handles authentication and role membership, while MVC Areas separate public pages from privileged back-office workflows.
+## Important Workflow Decisions
 
-That structure made it easier to add extra roles and features later in the project, especially ticket verification, review moderation, scoped venue management, and audit history.
+Several project decisions were made to keep the platform closer to a believable real-world system:
+
+- tickets are purchased, not just “registered”
+- reviews are allowed only after an event has ended
+- a user must have a valid attended purchase to review an event
+- refunds are restricted when the event is too close
+- checked-in tickets are marked as used so they cannot be reused for entry
+- venue managers do not have global event control; they are limited to assigned venues
+- venue staff only work within assigned venue scope
 
 ## Validation, Security, And Error Handling
 
-The project uses the built-in ASP.NET Core and Razor protections as the main security baseline:
+The project uses the standard ASP.NET Core and Razor safety mechanisms as the main security baseline.
 
-- ASP.NET Identity for authentication and role authorization
-- antiforgery protection on form submissions
-- server-side validation with data annotations and model state checks
-- client-side validation in the main forms
+### Validation
+
+Validation is applied in both the UI layer and the server layer through:
+
+- data annotations
+- model state checks
+- typed input models
+- client-side validation for the main forms
+
+### Security
+
+The application includes:
+
+- ASP.NET Core Identity for authentication
+- role-based authorization for privileged pages and actions
+- antiforgery validation for POST requests
+- Razor HTML encoding for displayed content
 - EF Core parameterized queries to reduce SQL injection risk
-- Razor HTML encoding for user-provided content
-- role-based authorization on admin, moderator, manager, and verification flows
 
-Custom status pages are included for:
+### Error Handling
+
+Custom error pages are included for:
 
 - `400 Bad Request`
 - `404 Not Found`
 - `500 Server Error`
 
+Status code handling is configured through the standard ASP.NET Core middleware pipeline.
+
 ## Search, Filtering, And Navigation
 
-The assignment asks for search or filtering, and the project includes both:
+Eventure includes both search and filtering throughout the application.
 
-- event search, category filtering, and status filtering
-- venue search
-- filtering and sorting in admin management screens
-- ticket lookup and verification filters for operational roles
+- public event search by title and category
+- event status filtering for upcoming and ended items
+- venue search by name and city
+- sorting and filtering in management pages
+- ticket verification search by ticket data
 
-Pagination is currently used on the venue directory and on several management listings. The public event catalog is intentionally shown as a longer chronological list because that suited the final browsing flow better.
+Pagination is used where it still makes sense, especially on venue and management listings. The public event catalog is intentionally shown as a larger chronological feed because it reads better for the final browsing experience.
 
-## Seeded Demo Data
+## Seeding Strategy
 
-On startup, the app applies migrations and seeds:
+On startup, the application:
 
-- categories
-- venues
-- upcoming and ended events
-- announcements
-- demo registrations and tickets
-- approved reviews
-- role accounts
-- venue assignments
+1. applies pending EF Core migrations
+2. creates any missing roles
+3. seeds categories, venues, events, announcements, purchases, reviews, tickets, and assignments
+4. ensures the demo accounts exist with the expected roles
 
-Seeded login accounts:
+This makes the project easier to review because a fresh database still contains enough meaningful data to demonstrate both the public and privileged workflows.
 
-- `admin@eventure.local` / `Admin123!` => `Administrator`, `Buyer`
-- `test@test.com` / `Test1234` => `Buyer`
-- `venuemanager@eventure.local` / `Venue1234` => `Venue Manager`, `Buyer`
-- `venuestaff@eventure.local` / `Staff1234` => `Venue Staff`
-- `moderator@eventure.local` / `Moder1234` => `Site Moderator`, `Buyer`
-- `buyer@eventure.local` / `Buyer123!` => `Buyer`
-- `reviewer@eventure.local` / `Reviewer123!` => `Buyer`
+## Seeded Accounts
 
-## Running The Project Locally
+The following demo accounts are seeded for testing:
 
-1. Open the project in Visual Studio 2022 or JetBrains Rider.
-2. Make sure SQL Server LocalDB or another SQL Server instance is available.
-3. Check the `DefaultConnection` value in `appsettings.json` if you want to use a different database.
+- `admin@eventure.local` / `Admin123!`  
+  Roles: `Administrator`, `Buyer`
+
+- `test@test.com` / `Test1234`  
+  Roles: `Buyer`
+
+- `venuemanager@eventure.local` / `Venue1234`  
+  Roles: `Venue Manager`, `Buyer`
+
+- `venuestaff@eventure.local` / `Staff1234`  
+  Roles: `Venue Staff`
+
+- `moderator@eventure.local` / `Moder1234`  
+  Roles: `Site Moderator`, `Buyer`
+
+- `buyer@eventure.local` / `Buyer123!`  
+  Roles: `Buyer`
+
+- `reviewer@eventure.local` / `Reviewer123!`  
+  Roles: `Buyer`
+
+## Local Setup
+
+### Requirements
+
+- Visual Studio 2022 or JetBrains Rider
+- .NET 9 SDK
+- SQL Server LocalDB or another SQL Server instance
+
+### Steps
+
+1. Clone the repository.
+2. Open the project in Visual Studio 2022 or JetBrains Rider.
+3. Check `appsettings.json` and update the SQL Server connection string if needed.
 4. Restore NuGet packages.
-5. Run the project:
+5. Start the application:
 
 ```powershell
-dotnet run --project ".\\ASP PROJECT.csproj"
+dotnet run --project ".\ASP PROJECT.csproj"
 ```
 
-The application applies migrations on startup and then seeds the database with sample data.
+On startup, the application migrates the database and runs the seeding process automatically.
 
-## Tests
+## Testing
 
-Unit tests are included in `ASP PROJECT.Tests`. The current test project focuses on service-layer behavior, including:
+Unit tests are included in the `ASP PROJECT.Tests` project. The current test suite covers the main service layer scenarios that were most important for the business logic:
 
 - event filtering
-- purchase and seat-availability rules
-- refund / repurchase scenarios
-- review eligibility rules
-- venue search and paging behavior
-- announcement listing logic
-- dashboard summary behavior
+- purchase rules and seat availability
+- repurchase after refund
+- review eligibility after event completion
+- venue listing behavior
+- announcement listing behavior
+- dashboard logic
 
 Run the tests with:
 
 ```powershell
-dotnet test ".\\ASP PROJECT.Tests\\ASP PROJECT.Tests.csproj"
+dotnet test ".\ASP PROJECT.Tests\ASP PROJECT.Tests.csproj" -c Release
 ```
 
 ## Deployment
 
-The project is prepared for deployment with SQL Server. The safest match for the course criteria is:
+The project is designed to work with SQL Server in both local and hosted environments.
 
-- Azure App Service for hosting
-- Azure SQL Database for production data
+For the public demo, the application can be deployed to a public hosting provider while still using a Microsoft SQL Server database. The main things needed for deployment are:
 
-Before final submission, the deployment section should include:
+- a valid production SQL Server connection string
+- `ASPNETCORE_ENVIRONMENT=Production`
+- a published or containerized ASP.NET Core build
 
-- the public live URL
-- the production database choice
-- any deployment-specific notes or screenshots
+## Technologies Used
 
-## Course Criteria Notes
+- ASP.NET Core MVC
+- .NET 9
+- Razor
+- Entity Framework Core
+- Microsoft SQL Server
+- ASP.NET Core Identity
+- Bootstrap 5
+- xUnit
 
-From the codebase side, the project covers the main technical expectations:
+## Design Notes
 
-- ASP.NET Core and .NET 6+ requirement
-- more than 15 views
-- more than 6 entity models
-- more than 5 controllers
-- Razor views, partials, and areas
-- EF Core with SQL Server
-- Identity and role-based authorization
-- seeded relevant data
-- search and filtering
-- custom error pages
-- dependency injection
+The project was intentionally pushed beyond simple generated CRUD. The focus was to make the flows feel more realistic:
 
-The remaining submission quality depends on the final non-code items too, especially:
+- buyers purchase tickets instead of only registering
+- tickets have identity data and verification flow
+- event reviews are tied to attendance and timing
+- operational roles have limited scope instead of global access
+- administrators can inspect a traceable audit history
 
-- public deployment
-- strong test coverage proof if required by the evaluator
-- a complete Git history that satisfies the course rules
-
-## Final Notes
-
-This project started as an event management idea, but the final version is closer to a small platform with public browsing, ticket handling, operations support, moderation, and administration. The goal was not just to check off the technical requirements, but to make the roles and workflows feel believable enough for a real course final project.
+That made the project more complex, but also more suitable for an advanced ASP.NET assignment with layered architecture and multiple user journeys.
